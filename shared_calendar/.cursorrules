@@ -1,0 +1,19 @@
+{
+    "rules": {
+        "template_files": {
+            "description": "Prevent creating or moving template files",
+            "type": "file_operation",
+            "patterns": [
+                "**/templates/**",
+                "**/*.html"
+            ],
+            "action": "prevent",
+            "message": "Template files should not be created or modified in this repository. Please manage templates in your main Django project."
+        }
+    },
+    "prettier": {
+        "formatOnSave": true,
+        "configFile": ".prettierrc",
+        "ignorePath": ".prettierignore"
+    }
+} 

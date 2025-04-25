@@ -37,6 +37,6 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
-        'django>=4.2',
+        'django>=4.2,<4.3',
     ],
 ) 

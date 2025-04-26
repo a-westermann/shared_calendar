@@ -1,1 +1,2 @@
 recursive-include shared_calendar/templates *.html
+recursive-include shared_calendar/static *

@@ -1,77 +1,14 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div class="calendar-container">
-    <div class="time-grid">
-        {% for hour in hours %}
-            <div class="time-slot">
-                <span class="time-label">{{ hour|time:"g:i A" }}</span>
-                <div class="time-line"></div>
-            </div>
-        {% endfor %}
-    </div>
-</div>
-
-<style>
-.calendar-container {
-    width: 100%;
-    overflow-x: auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.time-grid {
-    display: grid;
-    grid-template-columns: repeat({{ hours|length }}, 120px);
-    gap: 0;
-    min-width: max-content;
-}
-
-.time-slot {
-    position: relative;
-    height: 60px;
-    border-right: 1px solid #e0e0e0;
-}
-
-.time-label {
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 4px 8px;
-    font-size: 12px;
-    color: #666;
-    background: #f8f8f8;
-    border-radius: 4px;
-}
-
-.time-line {
-    position: absolute;
-    top: 30px;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: #e0e0e0;
-}
-
-/* Custom scrollbar styling */
-.calendar-container::-webkit-scrollbar {
-    height: 8px;
-}
-
-.calendar-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-}
-
-.calendar-container::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-}
-
-.calendar-container::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
-</style>
-{% endblock %} 
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shared Calendar</title>
+    {% load static %}
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="{% static 'js/react-calendar-app.js' %}" type="text/babel"></script>
+</head>
+<body>
+    <div id="calendar-root"></div>
+</body>
+</html> 

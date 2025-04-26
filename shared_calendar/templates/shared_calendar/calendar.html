@@ -5,10 +5,11 @@
     {% load static %}
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
     <div id="calendar-root"></div>
 
-    <script src="{% static 'js/react-calendar-app.js' %}"></script>
+    <script src="{% static 'js/react-calendar-app.js' %}" type="text/babel"></script>
 </body>
 </html> 

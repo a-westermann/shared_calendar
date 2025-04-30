@@ -15,7 +15,7 @@ const Timeline = () => {
                 border: '1px solid #e0e0e0',
                 borderRadius: '8px',
                 overflow: 'hidden',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                boxShadow: '0 2px 4px rgba(0,0,0,0.4)'
             }}>
                 {hours.map(hour => {
                     const time = hour < 12 

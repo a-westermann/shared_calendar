@@ -1,0 +1,1 @@
+AUTH_USER_MODEL = 'shared_calendar.User' 

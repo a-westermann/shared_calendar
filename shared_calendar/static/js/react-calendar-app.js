@@ -6,12 +6,14 @@ const Timeline = () => {
     return (
         <div style={{
             width: '100%',
-            maxWidth: '600px',
-            margin: '0 auto',
-            padding: '10px',
+            height: '100%',
+            margin: '0',
+            padding: '0',
             fontFamily: 'Arial, sans-serif'
         }}>
             <div style={{
+                width: '100%',
+                height: '100%',
                 border: '1px solid #e0e0e0',
                 borderRadius: '8px',
                 overflow: 'hidden',
@@ -44,6 +46,7 @@ const Timeline = () => {
                             
                             <div style={{
                                 width: '80px',
+                                minWidth: '80px', // Prevent shrinking on small screens
                                 padding: '10px',
                                 textAlign: 'right',
                                 borderRight: '1px solid #e0e0e0',

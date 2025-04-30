@@ -27,8 +27,3 @@ db.sqlite3
 db.sqlite3-journal
 media/
 
-# Template protection
-# DO NOT MODIFY OR CREATE TEMPLATE FILES
-# Templates should be managed in the main project's templates directory
-templates/
-shared_calendar/templates/ 

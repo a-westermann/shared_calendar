@@ -15,15 +15,16 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)  # This handles session storage too
+            request.session['user_id'] = user.id
             return redirect('calendar')
         else:
             return render(request, 'shared_calendar/login.html', {
                 'error': 'Invalid credentials'
             })
+            
     return render(request, 'shared_calendar/login.html')
 
 def logout_view(request):

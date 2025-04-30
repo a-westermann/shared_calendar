@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def check_session(view_func):
     def wrapper(request, *args, **kwargs):
-        if 'user_id' not in request.session:
+        if 'user' not in request.session:
             return JsonResponse({
                 'status': 'error',
                 'message': 'Not logged in'
@@ -23,7 +23,7 @@ def check_session(view_func):
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class CalendarView(View):
     def get(self, request):
-        if 'user_id' not in request.session:
+        if 'user' not in request.session:
             return redirect('/login/')  # Redirect to main site's login
         return render(request, 'shared_calendar/calendar.html', {
             'first_name': request.session.get('first_name', 'User')
@@ -51,7 +51,7 @@ def create_appointment(request):
             start_time=data['start_time'],
             end_time=data['end_time'],
             can_watch_evee=data['can_watch_evee'],
-            user_id=request.session['user_id']
+            user=request.session['user']
         )
         
         return JsonResponse({
@@ -78,7 +78,7 @@ def get_appointments(request):
 
         appointments = Appointment.objects.filter(
             date=date,
-            user_id=request.session['user_id']
+            user=request.session['user']
         ).values(
             'id', 'title', 'date', 'start_time', 'end_time', 'can_watch_evee'
         )

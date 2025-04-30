@@ -1,7 +1,7 @@
 // React calendar app will be implemented here
 const Timeline = () => {
     const hours = Array.from({length: 18}, (_, i) => i + 6); // 6 AM to 11 PM
-    const timeSlotHeight = 60; // pixels per hour slot
+    const timeSlotHeight = 90; // pixels per hour slot (increased from 60)
 
     return (
         <div style={{
@@ -29,8 +29,19 @@ const Timeline = () => {
                             height: `${timeSlotHeight}px`,
                             borderBottom: '1px solid #e0e0e0',
                             display: 'flex',
-                            backgroundColor: hour % 2 === 0 ? '#f8f9fa' : '#ffffff'
+                            backgroundColor: hour % 2 === 0 ? '#f8f9fa' : '#ffffff',
+                            position: 'relative'
                         }}>
+                            {/* Half-hour marker */}
+                            <div style={{
+                                position: 'absolute',
+                                left: '80px',
+                                right: '0',
+                                top: '50%',
+                                borderTop: '1px solid rgba(0,0,0,0.1)',
+                                zIndex: 1
+                            }} />
+                            
                             <div style={{
                                 width: '80px',
                                 padding: '10px',
@@ -38,14 +49,16 @@ const Timeline = () => {
                                 borderRight: '1px solid #e0e0e0',
                                 backgroundColor: '#f1f3f5',
                                 fontWeight: 'bold',
-                                color: '#495057'
+                                color: '#495057',
+                                zIndex: 2
                             }}>
                                 {time}
                             </div>
                             <div style={{
                                 flex: 1,
                                 padding: '10px',
-                                position: 'relative'
+                                position: 'relative',
+                                zIndex: 2
                             }}>
                                 {/* Event space */}
                             </div>

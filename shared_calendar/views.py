@@ -4,42 +4,34 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_POST, require_GET
 from django.views import View
 from django.utils.decorators import method_decorator
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 import json
 from .models import Appointment
 import logging
 
 logger = logging.getLogger(__name__)
 
-def login_view(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('calendar')
-        else:
-            return render(request, 'shared_calendar/login.html', {
-                'error': 'Invalid credentials'
-            })
-    return render(request, 'shared_calendar/login.html')
+def check_session(view_func):
+    def wrapper(request, *args, **kwargs):
+        if 'user_id' not in request.session:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Not logged in'
+            }, status=401)
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
-def logout_view(request):
-    logout(request)
-    return redirect('login')
-
-class CalendarView(LoginRequiredMixin, View):
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class CalendarView(View):
     def get(self, request):
+        if 'user_id' not in request.session:
+            return redirect('/login/')  # Redirect to main site's login
         return render(request, 'shared_calendar/calendar.html', {
-            'first_name': request.user.first_name
+            'first_name': request.session.get('first_name', 'User')
         })
 
 @csrf_exempt
 @require_POST
-@login_required
+@check_session
 def create_appointment(request):
     try:
         data = json.loads(request.body)
@@ -59,7 +51,7 @@ def create_appointment(request):
             start_time=data['start_time'],
             end_time=data['end_time'],
             can_watch_evee=data['can_watch_evee'],
-            user=request.user
+            user_id=request.session['user_id']
         )
         
         return JsonResponse({
@@ -74,7 +66,7 @@ def create_appointment(request):
         }, status=400)
 
 @require_GET
-@login_required
+@check_session
 def get_appointments(request):
     try:
         date = request.GET.get('date')
@@ -86,7 +78,7 @@ def get_appointments(request):
 
         appointments = Appointment.objects.filter(
             date=date,
-            user=request.user
+            user_id=request.session['user_id']
         ).values(
             'id', 'title', 'date', 'start_time', 'end_time', 'can_watch_evee'
         )

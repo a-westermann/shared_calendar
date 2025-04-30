@@ -1,6 +1,6 @@
-# Shared Calendar App
+# Shared Calendar Django App
 
-A reusable Django app for a shared calendar.
+A Django app for managing shared calendars with user authentication.
 
 ## Project Rules
 
@@ -14,7 +14,7 @@ A reusable Django app for a shared calendar.
 
 1. Install the package:
 ```bash
-pip install django-shared-calendar
+pip install shared-calendar
 ```
 
 2. Add to your Django project's `INSTALLED_APPS`:
@@ -22,15 +22,54 @@ pip install django-shared-calendar
 INSTALLED_APPS = [
     ...
     'shared_calendar',
-    ...
 ]
 ```
 
-3. Include the app's URLs in your project's `urls.py`:
+3. Add the following settings to your Django project's settings.py:
 ```python
+# Custom user model
+AUTH_USER_MODEL = 'shared_calendar.User'
+
+# Authentication URLs
+LOGIN_URL = '/calendar/login/'
+LOGIN_REDIRECT_URL = '/calendar/'
+LOGOUT_REDIRECT_URL = '/calendar/login/'
+```
+
+4. Include the app's URLs in your project's urls.py:
+```python
+from django.urls import path, include
+
 urlpatterns = [
     ...
     path('calendar/', include('shared_calendar.urls')),
-    ...
 ]
-``` 
+```
+
+5. Run migrations:
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+## Usage
+
+1. Create a user through the Django shell:
+```python
+from shared_calendar.models import User
+User.objects.create_user(
+    username='your_username',
+    first_name='Your Name',
+    password='your_password',
+    email='your@email.com'
+)
+```
+
+2. Access the calendar at `/calendar/` in your browser.
+
+## Features
+
+- User authentication
+- Calendar view with time slots
+- Appointment creation and management
+- User-specific appointments 

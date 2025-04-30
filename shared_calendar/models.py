@@ -17,7 +17,7 @@ class Appointment(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     can_watch_evee = models.BooleanField(default=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='appointments')
+    user = models.CharField(max_length=100)  # Changed to CharField to match session data
 
     def __str__(self):
         return f"{self.title} on {self.date}"

@@ -34,8 +34,11 @@ class CalendarView(View):
 @check_session
 def create_appointment(request):
     try:
+        print("Session data:", request.session)
+        print("Raw request body:", request.body)
+        
         data = json.loads(request.body)
-        logger.debug("Parsed data:", data)
+        print("Parsed data:", data)
 
         required_fields = ['title', 'date', 'start_time', 'end_time', 'can_watch_evee']
         missing_fields = [field for field in required_fields if field not in data]
@@ -45,21 +48,35 @@ def create_appointment(request):
                 'message': f'Missing required fields: {", ".join(missing_fields)}'
             }, status=400)
 
-        appointment = Appointment.objects.create(
-            title=data['title'],
-            date=data['date'],
-            start_time=data['start_time'],
-            end_time=data['end_time'],
-            can_watch_evee=data['can_watch_evee'],
-            user=request.session['user']
-        )
+        try:
+            appointment = Appointment.objects.create(
+                title=data['title'],
+                date=data['date'],
+                start_time=data['start_time'],
+                end_time=data['end_time'],
+                can_watch_evee=data['can_watch_evee'],
+                user=request.session['user']
+            )
+            print("Appointment created successfully:", appointment.id)
+        except Exception as e:
+            print("Error creating appointment:", str(e))
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error creating appointment: {str(e)}'
+            }, status=400)
         
         return JsonResponse({
             'status': 'success',
             'id': appointment.id
         })
+    except json.JSONDecodeError as e:
+        print("JSON decode error:", str(e))
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
     except Exception as e:
-        logger.debug("Error in create_appointment view:", str(e))
+        print("Unexpected error:", str(e))
         return JsonResponse({
             'status': 'error',
             'message': str(e)

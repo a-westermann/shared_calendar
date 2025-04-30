@@ -6,18 +6,20 @@ const Timeline = () => {
     return (
         <div style={{
             width: '100vw',
-            height: '100%',
+            height: '100vh',
             margin: '0',
             padding: '0',
             fontFamily: 'Arial, sans-serif',
             position: 'fixed',
             left: '0',
             top: '0',
-            overflow: 'hidden'
+            overflowX: 'hidden',
+            overflowY: 'auto',
+            touchAction: 'pan-y pinch-zoom'
         }}>
             <div style={{
                 width: '100%',
-                height: '100%',
+                minHeight: '100%',
                 border: '1px solid #e0e0e0',
                 borderRadius: '8px',
                 overflow: 'hidden',
@@ -60,7 +62,9 @@ const Timeline = () => {
                                 fontWeight: 'bold',
                                 color: '#495057',
                                 zIndex: 2,
-                                boxSizing: 'border-box'
+                                boxSizing: 'border-box',
+                                position: 'sticky',
+                                left: 0
                             }}>
                                 {time}
                             </div>

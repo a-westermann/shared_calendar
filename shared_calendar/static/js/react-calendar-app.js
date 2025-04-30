@@ -52,14 +52,14 @@ const Timeline = () => {
 
     const fetchAppointments = async () => {
         try {
-            const response = await fetch(`/api/appointments/?date=${selectedDate}`, {
+            const response = await fetch(`/calendar/api/appointments/get/?date=${selectedDate}`, {
                 headers: {
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 }
             });
             if (!response.ok) throw new Error('Failed to fetch appointments');
             const data = await response.json();
-            setAppointments(data);
+            setAppointments(data.appointments);
         } catch (error) {
             console.error('Error fetching appointments:', error);
         }
@@ -113,7 +113,7 @@ const Timeline = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('/api/appointments/', {
+            const response = await fetch('/calendar/api/appointments/create/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

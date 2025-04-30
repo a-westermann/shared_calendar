@@ -12,6 +12,13 @@ const Timeline = () => {
     });
     const [errors, setErrors] = React.useState({});
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [appointments, setAppointments] = React.useState([]);
+    const [selectedDate, setSelectedDate] = React.useState(new Date().toISOString().split('T')[0]);
+
+    // Fetch appointments when component mounts or selected date changes
+    React.useEffect(() => {
+        fetchAppointments();
+    }, [selectedDate]);
 
     const validateForm = () => {
         const newErrors = {};
@@ -43,61 +50,88 @@ const Timeline = () => {
         }));
     };
 
+    const fetchAppointments = async () => {
+        try {
+            const response = await fetch(`/api/appointments/?date=${selectedDate}`, {
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            if (!response.ok) throw new Error('Failed to fetch appointments');
+            const data = await response.json();
+            setAppointments(data);
+        } catch (error) {
+            console.error('Error fetching appointments:', error);
+        }
+    };
+
+    const getTimePosition = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        const totalMinutes = hours * 60 + minutes;
+        const startHour = 6; // 6 AM
+        const minutesFromStart = totalMinutes - (startHour * 60);
+        return (minutesFromStart / 60) * timeSlotHeight;
+    };
+
+    const getAppointmentHeight = (startTime, endTime) => {
+        const startPos = getTimePosition(startTime);
+        const endPos = getTimePosition(endTime);
+        return endPos - startPos;
+    };
+
+    const renderAppointments = () => {
+        return appointments.map((appointment, index) => {
+            const startPos = getTimePosition(appointment.start_time);
+            const height = getAppointmentHeight(appointment.start_time, appointment.end_time);
+            
+            return (
+                <div
+                    key={appointment.id}
+                    style={{
+                        position: 'absolute',
+                        top: `${startPos}px`,
+                        left: '80px',
+                        right: '10px',
+                        height: `${height}px`,
+                        backgroundColor: appointment.can_watch_evee ? '#e3f2fd' : '#fce4ec',
+                        border: '1px solid #90caf9',
+                        borderRadius: '4px',
+                        padding: '4px',
+                        overflow: 'hidden',
+                        zIndex: 1
+                    }}
+                >
+                    <div style={{ fontWeight: 'bold' }}>{appointment.title}</div>
+                    <div style={{ fontSize: '0.8em' }}>
+                        {appointment.start_time} - {appointment.end_time}
+                    </div>
+                </div>
+            );
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form submitted');
-        
-        if (!validateForm()) {
-            console.log('Form validation failed');
-            return;
-        }
-
-        setIsSubmitting(true);
-        console.log('Submitting form data:', formData);
-        
         try {
-            // Ensure all required fields are present and properly formatted
-            const submissionData = {
-                title: formData.title,
-                date: formData.date,
-                start_time: formData.start_time,
-                end_time: formData.end_time,
-                can_watch_evee: formData.can_watch_evee
-            };
-
-            console.log('Prepared submission data:', submissionData);
-
             const response = await fetch('/api/appointments/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 },
-                body: JSON.stringify(submissionData)
+                body: JSON.stringify({
+                    title: formData.title,
+                    date: formData.date,
+                    start_time: formData.start_time,
+                    end_time: formData.end_time,
+                    can_watch_evee: formData.can_watch_evee
+                })
             });
-
-            console.log('Response status:', response.status);
-            const data = await response.json();
-            console.log('Response data:', data);
-            
-            if (response.ok) {
-                // Reset form and close modal on success
-                setFormData({
-                    title: '',
-                    date: new Date().toISOString().split('T')[0],
-                    start_time: '',
-                    end_time: '',
-                    can_watch_evee: false
-                });
-                setShowModal(false);
-                // TODO: Add success notification
-            } else {
-                setErrors({ submit: data.message || 'Failed to create appointment' });
-            }
+            if (!response.ok) throw new Error('Failed to create appointment');
+            setShowModal(false);
+            fetchAppointments();
         } catch (error) {
-            console.error('Error submitting form:', error);
-            setErrors({ submit: 'Network error occurred' });
-        } finally {
-            setIsSubmitting(false);
+            console.error('Error creating appointment:', error);
         }
     };
 
@@ -178,6 +212,30 @@ const Timeline = () => {
                         </div>
                     );
                 })}
+                {renderAppointments()}
+            </div>
+
+            {/* Date selector */}
+            <div style={{
+                position: 'fixed',
+                top: '20px',
+                right: '20px',
+                zIndex: 1000,
+                backgroundColor: 'white',
+                padding: '10px',
+                borderRadius: '4px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}>
+                <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    style={{
+                        padding: '8px',
+                        borderRadius: '4px',
+                        border: '1px solid #ddd'
+                    }}
+                />
             </div>
 
             {/* Floating Action Button */}

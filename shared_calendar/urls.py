@@ -1,7 +1,8 @@
 from django.urls import path
-from . import views
+from .views import CalendarView, create_appointment, get_appointments
 
 urlpatterns = [
-    path('calendar/', views.calendar, name='calendar'),
-    path('api/appointments/', views.create_appointment, name='create_appointment'),
+    path('calendar/', CalendarView.as_view(), name='calendar'),
+    path('api/appointments/', create_appointment, name='create_appointment'),
+    path('api/appointments/', get_appointments, name='get_appointments'),
 ] 

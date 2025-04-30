@@ -45,20 +45,32 @@ const Timeline = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!validateForm()) return;
+        console.log('Form submitted');
+        
+        if (!validateForm()) {
+            console.log('Form validation failed');
+            return;
+        }
 
         setIsSubmitting(true);
+        console.log('Submitting form data:', formData);
+        
         try {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            console.log('CSRF Token:', csrfToken);
+
             const response = await fetch('/api/appointments/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value
+                    'X-CSRFToken': csrfToken
                 },
                 body: JSON.stringify(formData)
             });
 
+            console.log('Response status:', response.status);
             const data = await response.json();
+            console.log('Response data:', data);
             
             if (response.ok) {
                 // Reset form and close modal on success
@@ -75,6 +87,7 @@ const Timeline = () => {
                 setErrors({ submit: data.message || 'Failed to create appointment' });
             }
         } catch (error) {
+            console.error('Error submitting form:', error);
             setErrors({ submit: 'Network error occurred' });
         } finally {
             setIsSubmitting(false);

@@ -7,8 +7,36 @@
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        .user-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .logout-button {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .logout-button:hover {
+            background: #d32f2f;
+        }
+    </style>
 </head>
 <body>
+    <div class="user-info">
+        Welcome, {{ first_name }}!
+        <a href="{% url 'logout' %}" class="logout-button">Logout</a>
+    </div>
     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
     <div id="calendar-root"></div>
 

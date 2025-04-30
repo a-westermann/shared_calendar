@@ -79,6 +79,14 @@ const Timeline = () => {
         return endPos - startPos;
     };
 
+    const formatTime = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:${minutes} ${ampm}`;
+    };
+
     const renderAppointments = () => {
         return appointments.map((appointment, index) => {
             const startPos = getTimePosition(appointment.start_time);
@@ -103,7 +111,7 @@ const Timeline = () => {
                 >
                     <div style={{ fontWeight: 'bold' }}>{appointment.title}</div>
                     <div style={{ fontSize: '0.8em' }}>
-                        {appointment.start_time} - {appointment.end_time}
+                        {formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}
                     </div>
                 </div>
             );

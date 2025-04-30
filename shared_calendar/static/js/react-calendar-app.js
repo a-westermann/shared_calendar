@@ -1,19 +1,21 @@
 // React calendar app will be implemented here
 const Timeline = () => {
     const hours = Array.from({length: 18}, (_, i) => i + 6); // 6 AM to 11 PM
-    const hourWidth = 100; // pixels per hour
+    const timeSlotHeight = 60; // pixels per hour slot
 
     return (
         <div style={{
             width: '100%',
-            overflowX: 'auto',
-            border: '1px solid #ccc',
-            padding: '20px',
-            margin: '20px'
+            maxWidth: '600px',
+            margin: '0 auto',
+            padding: '10px',
+            fontFamily: 'Arial, sans-serif'
         }}>
             <div style={{
-                display: 'flex',
-                minWidth: `${hourWidth * hours.length}px`
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}>
                 {hours.map(hour => {
                     const time = hour < 12 
@@ -24,17 +26,29 @@ const Timeline = () => {
                     
                     return (
                         <div key={hour} style={{
-                            width: `${hourWidth}px`,
-                            borderRight: '1px solid #eee',
-                            padding: '10px',
-                            textAlign: 'center'
+                            height: `${timeSlotHeight}px`,
+                            borderBottom: '1px solid #e0e0e0',
+                            display: 'flex',
+                            backgroundColor: hour % 2 === 0 ? '#f8f9fa' : '#ffffff'
                         }}>
-                            <div style={{ fontWeight: 'bold' }}>{time}</div>
-                            <div style={{ 
-                                height: '100px',
-                                borderTop: '1px solid #eee',
-                                marginTop: '10px'
-                            }}></div>
+                            <div style={{
+                                width: '80px',
+                                padding: '10px',
+                                textAlign: 'right',
+                                borderRight: '1px solid #e0e0e0',
+                                backgroundColor: '#f1f3f5',
+                                fontWeight: 'bold',
+                                color: '#495057'
+                            }}>
+                                {time}
+                            </div>
+                            <div style={{
+                                flex: 1,
+                                padding: '10px',
+                                position: 'relative'
+                            }}>
+                                {/* Event space */}
+                            </div>
                         </div>
                     );
                 })}

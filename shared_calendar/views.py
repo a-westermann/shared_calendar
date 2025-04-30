@@ -26,7 +26,7 @@ class CalendarView(View):
         if 'user' not in request.session:
             return redirect('/login/')  # Redirect to main site's login
         return render(request, 'shared_calendar/calendar.html', {
-            'first_name': request.session.get('first_name', 'User')
+            'first_name': request.session.get('first_name', request.session['user'])
         })
 
 @csrf_exempt

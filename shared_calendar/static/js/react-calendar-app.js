@@ -5,11 +5,15 @@ const Timeline = () => {
 
     return (
         <div style={{
-            width: '100%',
+            width: '100vw',
             height: '100%',
             margin: '0',
             padding: '0',
-            fontFamily: 'Arial, sans-serif'
+            fontFamily: 'Arial, sans-serif',
+            position: 'fixed',
+            left: '0',
+            top: '0',
+            overflow: 'hidden'
         }}>
             <div style={{
                 width: '100%',
@@ -17,7 +21,8 @@ const Timeline = () => {
                 border: '1px solid #e0e0e0',
                 borderRadius: '8px',
                 overflow: 'hidden',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.4)'
+                boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
+                boxSizing: 'border-box'
             }}>
                 {hours.map(hour => {
                     const time = hour < 12 
@@ -32,7 +37,8 @@ const Timeline = () => {
                             borderBottom: '1px solid #e0e0e0',
                             display: 'flex',
                             backgroundColor: hour % 2 === 0 ? '#f8f9fa' : '#ffffff',
-                            position: 'relative'
+                            position: 'relative',
+                            boxSizing: 'border-box'
                         }}>
                             {/* Half-hour marker */}
                             <div style={{
@@ -46,14 +52,15 @@ const Timeline = () => {
                             
                             <div style={{
                                 width: '80px',
-                                minWidth: '80px', // Prevent shrinking on small screens
+                                minWidth: '80px',
                                 padding: '10px',
                                 textAlign: 'right',
                                 borderRight: '1px solid #e0e0e0',
                                 backgroundColor: '#f1f3f5',
                                 fontWeight: 'bold',
                                 color: '#495057',
-                                zIndex: 2
+                                zIndex: 2,
+                                boxSizing: 'border-box'
                             }}>
                                 {time}
                             </div>
@@ -61,7 +68,8 @@ const Timeline = () => {
                                 flex: 1,
                                 padding: '10px',
                                 position: 'relative',
-                                zIndex: 2
+                                zIndex: 2,
+                                boxSizing: 'border-box'
                             }}>
                                 {/* Event space */}
                             </div>

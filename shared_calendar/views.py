@@ -6,6 +6,7 @@ import json
 from .models import Appointment
 
 def calendar(request):
+    print("Calendar view called ")
     return render(request, 'shared_calendar/calendar.html')
 
 @csrf_exempt

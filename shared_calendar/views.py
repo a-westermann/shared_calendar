@@ -14,6 +14,7 @@ def create_appointment(request):
     try:
         # Print the raw request body for debugging
         print("Raw request body:", request.body)
+        print("Request headers:", dict(request.headers))
         
         # Try to parse the JSON data
         try:

@@ -56,7 +56,8 @@ const Timeline = () => {
         console.log('Submitting form data:', formData);
         
         try {
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            // Get CSRF token from the hidden input
+            const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
             console.log('CSRF Token:', csrfToken);
 
             // Ensure all required fields are present and properly formatted
@@ -76,6 +77,7 @@ const Timeline = () => {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify(submissionData)
             });
 

@@ -9,7 +9,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
-    {% csrf_token %}
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
     <div id="calendar-root"></div>
 
     <script src="{% static 'js/react-calendar-app.js' %}" type="text/babel"></script>

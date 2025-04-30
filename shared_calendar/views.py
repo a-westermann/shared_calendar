@@ -6,19 +6,21 @@ from django.views import View
 from django.utils.decorators import method_decorator
 import json
 from .models import User, Appointment
+from django.contrib.auth import authenticate, login
 import logging
 logger = logging.getLogger(__name__)
 
+
 def login_view(request):
     if request.method == 'POST':
-        first_name = request.POST.get('first_name')
+        username = request.POST.get('username')
         password = request.POST.get('password')
-        try:
-            user = User.objects.get(first_name=first_name, password=password)
-            request.session['user_id'] = user.id
-            request.session['first_name'] = user.first_name
+
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)  # This handles session storage too
             return redirect('calendar')
-        except User.DoesNotExist:
+        else:
             return render(request, 'shared_calendar/login.html', {
                 'error': 'Invalid credentials'
             })

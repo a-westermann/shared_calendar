@@ -25,8 +25,9 @@ class CalendarView(View):
     def get(self, request):
         if 'user' not in request.session:
             return redirect('/login/')  # Redirect to main site's login
+        username = json.loads(request.session['user'])['username']
         return render(request, 'shared_calendar/calendar.html', {
-            'first_name': request.session.get('first_name', request.session['user'])
+            'first_name': request.session.get('first_name', username)
         })
 
 @csrf_exempt
@@ -49,13 +50,14 @@ def create_appointment(request):
             }, status=400)
 
         try:
+            username = json.loads(request.session['user'])['username']
             appointment = Appointment.objects.create(
                 title=data['title'],
                 date=data['date'],
                 start_time=data['start_time'],
                 end_time=data['end_time'],
                 can_watch_evee=data['can_watch_evee'],
-                user=request.session['user']
+                user=username
             )
             print("Appointment created successfully:", appointment.id)
         except Exception as e:
@@ -93,9 +95,10 @@ def get_appointments(request):
                 'message': 'Date parameter is required'
             }, status=400)
 
+        username = json.loads(request.session['user'])['username']
         appointments = Appointment.objects.filter(
             date=date,
-            user=request.session['user']
+            user=username
         ).values(
             'id', 'title', 'date', 'start_time', 'end_time', 'can_watch_evee'
         )
@@ -105,7 +108,7 @@ def get_appointments(request):
             'appointments': list(appointments)
         })
     except Exception as e:
-        logger.debug("Error in get_appointments view:", str(e))
+        print("Error in get_appointments view:", str(e))
         return JsonResponse({
             'status': 'error',
             'message': str(e)

@@ -15,7 +15,7 @@ class Appointment(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     can_watch_evee = models.BooleanField(default=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='appointments')
+    user = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='appointments')
 
     def __str__(self):
         return f"{self.title} on {self.date}"

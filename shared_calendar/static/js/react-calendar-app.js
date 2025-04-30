@@ -59,13 +59,24 @@ const Timeline = () => {
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
             console.log('CSRF Token:', csrfToken);
 
+            // Ensure all required fields are present and properly formatted
+            const submissionData = {
+                title: formData.title,
+                date: formData.date,
+                start_time: formData.start_time,
+                end_time: formData.end_time,
+                can_watch_evee: formData.can_watch_evee
+            };
+
+            console.log('Prepared submission data:', submissionData);
+
             const response = await fetch('/api/appointments/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(submissionData)
             });
 
             console.log('Response status:', response.status);

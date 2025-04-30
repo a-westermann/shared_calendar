@@ -12,7 +12,30 @@ def calendar(request):
 @require_POST
 def create_appointment(request):
     try:
-        data = json.loads(request.body)
+        # Print the raw request body for debugging
+        print("Raw request body:", request.body)
+        
+        # Try to parse the JSON data
+        try:
+            data = json.loads(request.body)
+            print("Parsed data:", data)
+        except json.JSONDecodeError as e:
+            print("JSON decode error:", str(e))
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid JSON data'
+            }, status=400)
+
+        # Validate required fields
+        required_fields = ['title', 'date', 'start_time', 'end_time', 'can_watch_evee']
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Missing required fields: {", ".join(missing_fields)}'
+            }, status=400)
+
+        # Create the appointment
         appointment = Appointment.objects.create(
             title=data['title'],
             date=data['date'],
@@ -20,11 +43,13 @@ def create_appointment(request):
             end_time=data['end_time'],
             can_watch_evee=data['can_watch_evee']
         )
+        
         return JsonResponse({
             'status': 'success',
             'id': appointment.id
         })
     except Exception as e:
+        print("Error creating appointment:", str(e))
         return JsonResponse({
             'status': 'error',
             'message': str(e)

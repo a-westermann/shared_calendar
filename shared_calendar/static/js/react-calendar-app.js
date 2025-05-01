@@ -12,7 +12,10 @@ const Timeline = () => {
         date: new Date().toISOString().split('T')[0], // Set default to today
         start_time: '',
         end_time: '',
-        can_watch_evee: false
+        can_watch_evee: false,
+        is_recurring: false,
+        recurrence_days: [],
+        recurrence_end_date: ''
     });
     const [errors, setErrors] = React.useState({});
     const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -132,7 +135,10 @@ const Timeline = () => {
                 date: appointment.date,
                 start_time: appointment.start_time,
                 end_time: appointment.end_time,
-                can_watch_evee: appointment.can_watch_evee
+                can_watch_evee: appointment.can_watch_evee,
+                is_recurring: appointment.is_recurring || false,
+                recurrence_days: appointment.recurrence_days || [],
+                recurrence_end_date: appointment.recurrence_end_date || ''
             });
             setShowModal(true);
         }
@@ -151,12 +157,15 @@ const Timeline = () => {
             if (!response.ok) throw new Error('Failed to delete appointment');
             setShowModal(false);
             setEditingAppointment(null);  // Clear the editing state
-            setFormData({  // Reset the form data
+            setFormData({
                 title: currentUsername || '',
                 date: new Date().toISOString().split('T')[0],
                 start_time: '',
                 end_time: '',
-                can_watch_evee: false
+                can_watch_evee: false,
+                is_recurring: false,
+                recurrence_days: [],
+                recurrence_end_date: ''
             });
             fetchAppointments();
         } catch (error) {
@@ -207,6 +216,15 @@ const Timeline = () => {
             console.error('Error saving appointment:', error);
             alert(`Error: ${error.message}`);
         }
+    };
+
+    const toggleRecurrenceDay = (day) => {
+        setFormData(prev => ({
+            ...prev,
+            recurrence_days: prev.recurrence_days.includes(day)
+                ? prev.recurrence_days.filter(d => d !== day)
+                : [...prev.recurrence_days, day]
+        }));
     };
 
     const renderAppointments = () => {
@@ -260,6 +278,15 @@ const Timeline = () => {
                             fontSize: '1.2em',
                             color: '#f57c00'
                         }}>★</div>
+                    )}
+                    {appointment.is_recurring && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: appointment.can_watch_evee ? '24px' : '4px',
+                            fontSize: '1.2em',
+                            color: '#1976d2'
+                        }}>↻</div>
                     )}
                     {isOverlapping && (
                         <div style={{
@@ -607,6 +634,67 @@ const Timeline = () => {
                                     Can Watch Evee
                                 </label>
                             </div>
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        name="is_recurring"
+                                        checked={formData.is_recurring}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, is_recurring: e.target.checked }))}
+                                        style={{
+                                            width: '18px',
+                                            height: '18px',
+                                            cursor: 'pointer'
+                                        }}
+                                    />
+                                    Recurring Appointment
+                                </label>
+                            </div>
+
+                            {formData.is_recurring && (
+                                <>
+                                    <div style={{ marginBottom: '15px' }}>
+                                        <label style={{ display: 'block', marginBottom: '5px' }}>Recur on Days</label>
+                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => (
+                                                <button
+                                                    key={day}
+                                                    type="button"
+                                                    onClick={() => toggleRecurrenceDay(index)}
+                                                    style={{
+                                                        padding: '8px 12px',
+                                                        borderRadius: '4px',
+                                                        border: `1px solid ${formData.recurrence_days.includes(index) ? '#1976d2' : '#ddd'}`,
+                                                        backgroundColor: formData.recurrence_days.includes(index) ? '#1976d2' : 'white',
+                                                        color: formData.recurrence_days.includes(index) ? 'white' : '#333',
+                                                        cursor: 'pointer',
+                                                        minWidth: '100px'
+                                                    }}
+                                                >
+                                                    {day}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginBottom: '15px' }}>
+                                        <label style={{ display: 'block', marginBottom: '5px' }}>Recur Until</label>
+                                        <input
+                                            type="date"
+                                            name="recurrence_end_date"
+                                            value={formData.recurrence_end_date}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, recurrence_end_date: e.target.value }))}
+                                            style={{
+                                                width: '100%',
+                                                padding: '8px',
+                                                borderRadius: '4px',
+                                                border: '1px solid #ddd'
+                                            }}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
                                 <div>
                                     {editingAppointment && (

@@ -18,6 +18,11 @@ class Appointment(models.Model):
     end_time = models.TimeField()
     can_watch_evee = models.BooleanField(default=False)
     user = models.CharField(max_length=100)  # Store the username from session
-
+    
+    # Recurrence fields
+    is_recurring = models.BooleanField(default=False)
+    recurrence_days = models.JSONField(default=list)  # List of days (0-6, where 0 is Monday)
+    recurrence_end_date = models.DateField(null=True, blank=True)  # Optional end date for recurrence
+    
     def __str__(self):
-        return f"{self.title} on {self.date}"
+        return f"{self.title} on {self.date} from {self.start_time} to {self.end_time}"

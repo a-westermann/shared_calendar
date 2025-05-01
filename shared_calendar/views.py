@@ -154,14 +154,13 @@ def create_appointment(request):
         return JsonResponse({'error': str(e)}, status=400)
 
 @require_GET
-@check_session
+@login_required
 def get_appointments(request):
     try:
         date = request.GET.get('date')
         if not date:
             return JsonResponse({
-                'status': 'error',
-                'message': 'Date parameter is required'
+                'error': 'Date parameter is required'
             }, status=400)
 
         # Get appointments for both users
@@ -169,19 +168,25 @@ def get_appointments(request):
             date=date,
             user__in=['a.westermann.19', 'Ash']
         ).values(
-            'id', 'title', 'date', 'start_time', 'end_time', 'can_watch_evee', 'user'
+            'id', 'title', 'date', 'start_time', 'end_time', 
+            'can_watch_evee', 'user', 'is_recurring', 
+            'recurrence_days', 'recurrence_end_date'
         )
         
+        print("\nFetched appointments:")
+        for appointment in appointments:
+            print(f"Appointment {appointment['id']}:")
+            print(f"Title: {appointment['title']}")
+            print(f"Recurring: {appointment['is_recurring']}")
+            print(f"Recurrence days: {appointment['recurrence_days']}")
+            print(f"Recurrence end date: {appointment['recurrence_end_date']}")
+        
         return JsonResponse({
-            'status': 'success',
             'appointments': list(appointments)
         })
     except Exception as e:
-        print("Error in get_appointments view:", str(e))
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=400)
+        print(f"Error in get_appointments: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)
 
 @csrf_exempt
 @require_POST

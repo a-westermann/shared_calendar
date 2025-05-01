@@ -163,9 +163,17 @@ def get_appointments(request):
                 'error': 'Date parameter is required'
             }, status=400)
 
+        # Validate date format
+        try:
+            date_obj = datetime.strptime(date, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({
+                'error': f'Invalid date format: {date}. Must be in YYYY-MM-DD format.'
+            }, status=400)
+
         # Get appointments for both users
         appointments = Appointment.objects.filter(
-            date=date,
+            date=date_obj,
             user__in=['a.westermann.19', 'Ash']
         ).values(
             'id', 'title', 'date', 'start_time', 'end_time', 
@@ -173,8 +181,30 @@ def get_appointments(request):
             'recurrence_days', 'recurrence_end_date'
         )
         
-        print("\nFetched appointments:")
+        # Convert the queryset to a list and handle any potential serialization issues
+        appointments_list = []
         for appointment in appointments:
+            try:
+                # Ensure all fields are properly formatted
+                appointment_data = {
+                    'id': appointment['id'],
+                    'title': appointment['title'],
+                    'date': appointment['date'].strftime('%Y-%m-%d'),
+                    'start_time': appointment['start_time'],
+                    'end_time': appointment['end_time'],
+                    'can_watch_evee': appointment['can_watch_evee'],
+                    'user': appointment['user'],
+                    'is_recurring': appointment['is_recurring'],
+                    'recurrence_days': appointment['recurrence_days'] or [],
+                    'recurrence_end_date': appointment['recurrence_end_date'].strftime('%Y-%m-%d') if appointment['recurrence_end_date'] else None
+                }
+                appointments_list.append(appointment_data)
+            except Exception as e:
+                print(f"Error processing appointment {appointment.get('id')}: {str(e)}")
+                continue
+        
+        print("\nFetched appointments:")
+        for appointment in appointments_list:
             print(f"Appointment {appointment['id']}:")
             print(f"Title: {appointment['title']}")
             print(f"Recurring: {appointment['is_recurring']}")
@@ -182,7 +212,7 @@ def get_appointments(request):
             print(f"Recurrence end date: {appointment['recurrence_end_date']}")
         
         return JsonResponse({
-            'appointments': list(appointments)
+            'appointments': appointments_list
         })
     except Exception as e:
         print(f"Error in get_appointments: {str(e)}")

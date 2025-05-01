@@ -24,7 +24,7 @@
 </head>
 <body>
     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-    <div id="calendar-root"></div>
+    <div id="calendar-root" data-username="{{ username }}"></div>
 
     <script src="{% static 'js/react-calendar-app.js' %}" type="text/babel"></script>
 </body>

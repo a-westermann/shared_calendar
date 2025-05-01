@@ -121,3 +121,73 @@ def get_appointments(request):
             'status': 'error',
             'message': str(e)
         }, status=400)
+
+@csrf_exempt
+@require_POST
+@check_session
+def update_appointment(request, appointment_id):
+    try:
+        data = json.loads(request.body)
+        print("Update data:", data)
+
+        try:
+            appointment = Appointment.objects.get(id=appointment_id)
+            # Only allow updating if the current user owns the appointment
+            if appointment.user != json.loads(request.session['user'])['username']:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Not authorized to update this appointment'
+                }, status=403)
+
+            appointment.title = data.get('title', appointment.title)
+            appointment.date = data.get('date', appointment.date)
+            appointment.start_time = data.get('start_time', appointment.start_time)
+            appointment.end_time = data.get('end_time', appointment.end_time)
+            appointment.can_watch_evee = data.get('can_watch_evee', appointment.can_watch_evee)
+            appointment.save()
+
+            return JsonResponse({
+                'status': 'success',
+                'id': appointment.id
+            })
+        except Appointment.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Appointment not found'
+            }, status=404)
+    except Exception as e:
+        print("Error updating appointment:", str(e))
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
+@csrf_exempt
+@require_POST
+@check_session
+def delete_appointment(request, appointment_id):
+    try:
+        try:
+            appointment = Appointment.objects.get(id=appointment_id)
+            # Only allow deletion if the current user owns the appointment
+            if appointment.user != json.loads(request.session['user'])['username']:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Not authorized to delete this appointment'
+                }, status=403)
+
+            appointment.delete()
+            return JsonResponse({
+                'status': 'success'
+            })
+        except Appointment.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Appointment not found'
+            }, status=404)
+    except Exception as e:
+        print("Error deleting appointment:", str(e))
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)

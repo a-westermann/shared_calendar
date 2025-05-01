@@ -3,8 +3,12 @@ const Timeline = () => {
     const hours = Array.from({length: 18}, (_, i) => i + 6); // 6 AM to 11 PM
     const timeSlotHeight = 90; // pixels per hour slot (increased from 60)
     const [showModal, setShowModal] = React.useState(false);
+    const [editingAppointment, setEditingAppointment] = React.useState(null);
+    const rootElement = document.getElementById('calendar-root');
+    const currentUsername = rootElement ? rootElement.dataset.username : '';
+    console.log('Current username:', currentUsername); // Debug log
     const [formData, setFormData] = React.useState({
-        title: '',
+        title: currentUsername || '',
         date: new Date().toISOString().split('T')[0], // Set default to today
         start_time: '',
         end_time: '',
@@ -87,15 +91,109 @@ const Timeline = () => {
         return `${hour12}:${minutes} ${ampm}`;
     };
 
+    const detectOverlaps = (appointments) => {
+        const overlaps = new Set();
+        const sortedAppointments = [...appointments].sort((a, b) => {
+            const aStart = new Date(`2000-01-01T${a.start_time}`);
+            const bStart = new Date(`2000-01-01T${b.start_time}`);
+            return aStart - bStart;
+        });
+
+        for (let i = 0; i < sortedAppointments.length; i++) {
+            for (let j = i + 1; j < sortedAppointments.length; j++) {
+                const a = sortedAppointments[i];
+                const b = sortedAppointments[j];
+                
+                const aStart = new Date(`2000-01-01T${a.start_time}`);
+                const aEnd = new Date(`2000-01-01T${a.end_time}`);
+                const bStart = new Date(`2000-01-01T${b.start_time}`);
+                const bEnd = new Date(`2000-01-01T${b.end_time}`);
+
+                if (aStart < bEnd && bStart < aEnd) {
+                    overlaps.add(a.id);
+                    overlaps.add(b.id);
+                }
+            }
+        }
+        return overlaps;
+    };
+
+    const handleAppointmentClick = (appointment) => {
+        if (appointment.user === currentUsername) {
+            setEditingAppointment(appointment);
+            setFormData({
+                title: appointment.title,
+                date: appointment.date,
+                start_time: appointment.start_time,
+                end_time: appointment.end_time,
+                can_watch_evee: appointment.can_watch_evee
+            });
+            setShowModal(true);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!editingAppointment) return;
+        
+        try {
+            const response = await fetch(`/calendar/api/appointments/${editingAppointment.id}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            if (!response.ok) throw new Error('Failed to delete appointment');
+            setShowModal(false);
+            fetchAppointments();
+        } catch (error) {
+            console.error('Error deleting appointment:', error);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const url = editingAppointment 
+                ? `/calendar/api/appointments/${editingAppointment.id}/update/`
+                : '/calendar/api/appointments/create/';
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    title: formData.title,
+                    date: formData.date,
+                    start_time: formData.start_time,
+                    end_time: formData.end_time,
+                    can_watch_evee: formData.can_watch_evee
+                })
+            });
+            if (!response.ok) throw new Error('Failed to save appointment');
+            setShowModal(false);
+            setEditingAppointment(null);
+            fetchAppointments();
+        } catch (error) {
+            console.error('Error saving appointment:', error);
+        }
+    };
+
     const renderAppointments = () => {
+        const overlappingAppointments = detectOverlaps(appointments);
+        
         return appointments.map((appointment, index) => {
             const startPos = getTimePosition(appointment.start_time);
             const height = getAppointmentHeight(appointment.start_time, appointment.end_time);
             const isWestermann = appointment.user === 'a.westermann.19';
+            const isOverlapping = overlappingAppointments.has(appointment.id);
+            const isEditable = appointment.user === currentUsername;
             
             return (
                 <div
                     key={appointment.id}
+                    onClick={() => handleAppointmentClick(appointment)}
                     style={{
                         position: 'absolute',
                         top: `${startPos}px`,
@@ -107,7 +205,8 @@ const Timeline = () => {
                         borderRadius: '4px',
                         padding: '4px',
                         overflow: 'hidden',
-                        zIndex: 1
+                        zIndex: 1,
+                        cursor: isEditable ? 'pointer' : 'default'
                     }}
                 >
                     <div style={{ fontWeight: 'bold' }}>{appointment.title}</div>
@@ -123,34 +222,20 @@ const Timeline = () => {
                             color: '#f57c00'
                         }}>★</div>
                     )}
+                    {isOverlapping && (
+                        <div style={{
+                            position: 'absolute',
+                            left: '-80px',
+                            top: '0',
+                            width: '80px',
+                            height: '100%',
+                            backgroundColor: 'rgba(244, 67, 54, 0.2)',
+                            borderLeft: '3px solid #f44336'
+                        }} />
+                    )}
                 </div>
             );
         });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch('/calendar/api/appointments/create/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                },
-                body: JSON.stringify({
-                    title: formData.title,
-                    date: formData.date,
-                    start_time: formData.start_time,
-                    end_time: formData.end_time,
-                    can_watch_evee: formData.can_watch_evee
-                })
-            });
-            if (!response.ok) throw new Error('Failed to create appointment');
-            setShowModal(false);
-            fetchAppointments();
-        } catch (error) {
-            console.error('Error creating appointment:', error);
-        }
     };
 
     return (
@@ -263,7 +348,7 @@ const Timeline = () => {
                 {renderAppointments()}
             </div>
 
-            {/* Date selector */}
+            {/* Date selector and navigation */}
             <div style={{
                 position: 'fixed',
                 top: '20px',
@@ -272,8 +357,31 @@ const Timeline = () => {
                 backgroundColor: 'white',
                 padding: '10px',
                 borderRadius: '4px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
             }}>
+                <button
+                    onClick={() => {
+                        const currentDate = new Date(selectedDate);
+                        currentDate.setDate(currentDate.getDate() - 1);
+                        setSelectedDate(currentDate.toISOString().split('T')[0]);
+                    }}
+                    style={{
+                        padding: '8px 12px',
+                        borderRadius: '4px',
+                        border: '1px solid #ddd',
+                        backgroundColor: 'white',
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
+                >
+                    ←
+                </button>
                 <input
                     type="date"
                     value={selectedDate}
@@ -284,6 +392,26 @@ const Timeline = () => {
                         border: '1px solid #ddd'
                     }}
                 />
+                <button
+                    onClick={() => {
+                        const currentDate = new Date(selectedDate);
+                        currentDate.setDate(currentDate.getDate() + 1);
+                        setSelectedDate(currentDate.toISOString().split('T')[0]);
+                    }}
+                    style={{
+                        padding: '8px 12px',
+                        borderRadius: '4px',
+                        border: '1px solid #ddd',
+                        backgroundColor: 'white',
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
+                >
+                    →
+                </button>
             </div>
 
             {/* Floating Action Button */}
@@ -334,7 +462,9 @@ const Timeline = () => {
                         maxHeight: '90vh',
                         overflow: 'auto'
                     }}>
-                        <h2 style={{ marginTop: 0 }}>Create New Appointment</h2>
+                        <h2 style={{ marginTop: 0 }}>
+                            {editingAppointment ? 'Edit Appointment' : 'Create New Appointment'}
+                        </h2>
                         <form onSubmit={handleSubmit}>
                             <div style={{ marginBottom: '15px' }}>
                                 <label style={{ display: 'block', marginBottom: '5px' }}>Title</label>
@@ -436,33 +566,56 @@ const Timeline = () => {
                                     Can Watch Evee
                                 </label>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    style={{
-                                        padding: '8px 16px',
-                                        borderRadius: '4px',
-                                        border: '1px solid #ddd',
-                                        backgroundColor: 'white',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    style={{
-                                        padding: '8px 16px',
-                                        borderRadius: '4px',
-                                        border: 'none',
-                                        backgroundColor: '#1976d2',
-                                        color: 'white',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    Create
-                                </button>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                                <div>
+                                    {editingAppointment && (
+                                        <button
+                                            type="button"
+                                            onClick={handleDelete}
+                                            style={{
+                                                padding: '8px 16px',
+                                                borderRadius: '4px',
+                                                border: 'none',
+                                                backgroundColor: '#dc3545',
+                                                color: 'white',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
+                                </div>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowModal(false);
+                                            setEditingAppointment(null);
+                                        }}
+                                        style={{
+                                            padding: '8px 16px',
+                                            borderRadius: '4px',
+                                            border: '1px solid #ddd',
+                                            backgroundColor: 'white',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        style={{
+                                            padding: '8px 16px',
+                                            borderRadius: '4px',
+                                            border: 'none',
+                                            backgroundColor: '#1976d2',
+                                            color: 'white',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {editingAppointment ? 'Save' : 'Create'}
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>

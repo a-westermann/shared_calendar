@@ -47,7 +47,7 @@ class CalendarView(View):
 def create_appointment(request):
     try:
         print("\n=== Creating Appointment ===")
-        print("Request data:", request.body)
+        print("Raw request body:", request.body)
         data = json.loads(request.body)
         print("Parsed data:", data)
         
@@ -55,14 +55,18 @@ def create_appointment(request):
         required_fields = ['title', 'date', 'start_time', 'end_time']
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
+            print(f"Missing required fields: {missing_fields}")
             return JsonResponse({
                 'error': f'Missing required fields: {", ".join(missing_fields)}'
             }, status=400)
         
         # Validate date format
+        print(f"Validating date: {data['date']}")
         try:
             date = datetime.strptime(data['date'], '%Y-%m-%d').date()
-        except ValueError:
+            print(f"Successfully parsed date: {date}")
+        except ValueError as e:
+            print(f"Date parsing error: {str(e)}")
             return JsonResponse({
                 'error': f'Invalid date format: {data["date"]}. Must be in YYYY-MM-DD format.'
             }, status=400)
@@ -75,7 +79,9 @@ def create_appointment(request):
         if is_recurring and recurrence_end_date:
             try:
                 recurrence_end_date = datetime.strptime(recurrence_end_date, '%Y-%m-%d').date()
-            except ValueError:
+                print(f"Successfully parsed recurrence end date: {recurrence_end_date}")
+            except ValueError as e:
+                print(f"Recurrence end date parsing error: {str(e)}")
                 return JsonResponse({
                     'error': f'Invalid recurrence end date format: {recurrence_end_date}. Must be in YYYY-MM-DD format.'
                 }, status=400)

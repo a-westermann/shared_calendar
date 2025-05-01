@@ -191,9 +191,13 @@ const Timeline = () => {
         e.preventDefault();
         console.log('Form data before submission:', formData);
         
+        // Ensure date is properly formatted
+        const formattedDate = new Date(formData.date).toISOString().split('T')[0];
+        console.log('Formatted date:', formattedDate);
+        
         const submitData = {
             title: formData.title,
-            date: formData.date,
+            date: formattedDate,
             start_time: formData.start_time,
             end_time: formData.end_time,
             can_watch_evee: formData.can_watch_evee,
@@ -203,11 +207,7 @@ const Timeline = () => {
         };
 
         console.log('Submitting appointment data:', submitData);
-        console.log('Recurring data:', {
-            is_recurring: formData.is_recurring,
-            recurrence_days: formData.recurrence_days,
-            recurrence_end_date: formData.recurrence_end_date
-        });
+        console.log('Raw JSON data:', JSON.stringify(submitData));
 
         try {
             const url = editingAppointment 

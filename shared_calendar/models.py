@@ -19,7 +19,10 @@ class Appointment(models.Model):
     end_time = models.TimeField()
     can_watch_evee = models.BooleanField(default=False)
     is_recurring = models.BooleanField(default=False)
-    recurrence_days = models.JSONField(default=list)
+    recurrence_days = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        db_table = 'shared_calendar_appointment'
 
     def __str__(self):
         return f"{self.title} on {self.date} from {self.start_time} to {self.end_time}"

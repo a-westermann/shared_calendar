@@ -47,8 +47,15 @@ def create_appointment(request):
     try:
         print("\n=== Creating Appointment ===")
         print("Raw request body:", request.body)
-        data = json.loads(request.body)
-        print("Parsed data:", data)
+        
+        try:
+            data = json.loads(request.body)
+            print("Parsed data:", data)
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {str(e)}")
+            return JsonResponse({
+                'error': f'Invalid JSON data: {str(e)}'
+            }, status=400)
         
         # Validate required fields
         required_fields = ['title', 'date', 'start_time', 'end_time']
@@ -80,15 +87,14 @@ def create_appointment(request):
         
         # Create the initial appointment
         appointment = Appointment.objects.create(
-            user=request.user,
+            user=request.user.username,
             title=data['title'],
             date=date,
             start_time=data['start_time'],
             end_time=data['end_time'],
             can_watch_evee=data.get('can_watch_evee', False),
             is_recurring=is_recurring,
-            recurrence_days=recurrence_days,
-            recurrence_end_date=None
+            recurrence_days=recurrence_days
         )
         
         print("\nCreated initial appointment:")
@@ -107,15 +113,14 @@ def create_appointment(request):
             while current_date <= end_date:
                 if current_date.weekday() in recurrence_days and current_date != date:
                     Appointment.objects.create(
-                        user=request.user,
+                        user=request.user.username,
                         title=data['title'],
                         date=current_date,
                         start_time=data['start_time'],
                         end_time=data['end_time'],
                         can_watch_evee=data.get('can_watch_evee', False),
                         is_recurring=True,
-                        recurrence_days=recurrence_days,
-                        recurrence_end_date=None
+                        recurrence_days=recurrence_days
                     )
                     print(f"Created recurring instance for {current_date}")
                 current_date += timedelta(days=1)

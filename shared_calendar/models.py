@@ -12,7 +12,7 @@ class User(AbstractUser):
 
 
 class Appointment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     date = models.DateField()
     start_time = models.TimeField()

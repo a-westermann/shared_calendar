@@ -45,17 +45,19 @@ class CalendarView(View):
 def create_appointment(request):
     try:
         print("\n=== Creating Appointment ===")
-        print("Request user:", request.user)
         print("Request session:", request.session)
         print("Request headers:", request.headers)
         
-        # Check if user is authenticated
-        if not request.user.is_authenticated:
-            print("User not authenticated")
+        # Check if user is in session
+        if 'user' not in request.session:
+            print("User not in session")
             return JsonResponse({
                 'error': 'Authentication required',
-                'redirect': '/accounts/login/'
+                'redirect': '/'
             }, status=401)
+            
+        username = json.loads(request.session['user'])['username']
+        print("User from session:", username)
             
         print("Raw request body:", request.body)
         
@@ -76,6 +78,13 @@ def create_appointment(request):
             return JsonResponse({
                 'error': f'Missing required fields: {", ".join(missing_fields)}'
             }, status=400)
+        
+        # Validate that the user in the request matches the session user
+        if data['user'] != username:
+            print(f"User mismatch: request user {data['user']} != session user {username}")
+            return JsonResponse({
+                'error': 'User mismatch'
+            }, status=403)
         
         # Validate date format
         print(f"Validating date: {data['date']}")
@@ -99,7 +108,7 @@ def create_appointment(request):
         # Create the initial appointment
         try:
             appointment = Appointment.objects.create(
-                user=data['user'],
+                user=username,  # Use the username from session
                 title=data['title'],
                 date=date,
                 start_time=data['start_time'],
@@ -135,7 +144,7 @@ def create_appointment(request):
                 if current_date.weekday() in recurrence_days and current_date != date:
                     try:
                         Appointment.objects.create(
-                            user=data['user'],
+                            user=username,  # Use the username from session
                             title=data['title'],
                             date=current_date,
                             start_time=data['start_time'],

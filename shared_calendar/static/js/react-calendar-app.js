@@ -7,15 +7,28 @@ const Timeline = () => {
     const rootElement = document.getElementById('calendar-root');
     const currentUsername = rootElement ? rootElement.dataset.username : '';
     console.log('Current username:', currentUsername); // Debug log
-    const [formData, setFormData] = React.useState({
-        title: currentUsername || '',
-        date: new Date().toISOString().split('T')[0], // Set default to today
-        start_time: '',
-        end_time: '',
-        can_watch_evee: false,
-        is_recurring: false,
-        recurrence_days: [],
-        recurrence_end_date: ''
+    const [formData, setFormData] = React.useState(() => {
+        // Get current time and round up to next hour
+        const now = new Date();
+        const currentHour = now.getHours();
+        const nextHour = currentHour + 1;
+        
+        // Format times as HH:MM
+        const formatTime = (hour) => {
+            const paddedHour = hour.toString().padStart(2, '0');
+            return `${paddedHour}:00`;
+        };
+
+        return {
+            title: currentUsername || '',
+            date: new Date().toISOString().split('T')[0],
+            start_time: formatTime(nextHour),
+            end_time: formatTime(nextHour + 1),
+            can_watch_evee: false,
+            is_recurring: false,
+            recurrence_days: [],
+            recurrence_end_date: ''
+        };
     });
     const [errors, setErrors] = React.useState({});
     const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -51,6 +64,7 @@ const Timeline = () => {
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
+        console.log(`Input changed - ${name}:`, value);
         setFormData(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value
@@ -160,8 +174,8 @@ const Timeline = () => {
             setFormData({
                 title: currentUsername || '',
                 date: new Date().toISOString().split('T')[0],
-                start_time: '',
-                end_time: '',
+                start_time: formatTime(new Date().getHours() + 1),
+                end_time: formatTime(new Date().getHours() + 2),
                 can_watch_evee: false,
                 is_recurring: false,
                 recurrence_days: [],
@@ -175,6 +189,7 @@ const Timeline = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('Form data before submission:', formData);
         
         const submitData = {
             title: formData.title,

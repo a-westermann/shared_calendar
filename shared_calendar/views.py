@@ -9,6 +9,7 @@ from .models import Appointment
 import logging
 from datetime import datetime, timedelta
 from dateutil import parser
+from django.contrib.auth.decorators import login_required
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +51,34 @@ def create_appointment(request):
         data = json.loads(request.body)
         print("Parsed data:", data)
         
+        # Validate required fields
+        required_fields = ['title', 'date', 'start_time', 'end_time']
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return JsonResponse({
+                'error': f'Missing required fields: {", ".join(missing_fields)}'
+            }, status=400)
+        
+        # Validate date format
+        try:
+            date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({
+                'error': f'Invalid date format: {data["date"]}. Must be in YYYY-MM-DD format.'
+            }, status=400)
+        
         # Extract recurrence data
         is_recurring = data.get('is_recurring', False)
         recurrence_days = data.get('recurrence_days', [])
         recurrence_end_date = data.get('recurrence_end_date')
+        
+        if is_recurring and recurrence_end_date:
+            try:
+                recurrence_end_date = datetime.strptime(recurrence_end_date, '%Y-%m-%d').date()
+            except ValueError:
+                return JsonResponse({
+                    'error': f'Invalid recurrence end date format: {recurrence_end_date}. Must be in YYYY-MM-DD format.'
+                }, status=400)
         
         print("\nRecurrence details:")
         print(f"is_recurring: {is_recurring}")
@@ -64,7 +89,7 @@ def create_appointment(request):
         appointment = Appointment.objects.create(
             user=request.user,
             title=data['title'],
-            date=data['date'],
+            date=date,
             start_time=data['start_time'],
             end_time=data['end_time'],
             can_watch_evee=data.get('can_watch_evee', False),
@@ -83,12 +108,11 @@ def create_appointment(request):
         # If recurring, create additional instances
         if is_recurring and recurrence_days:
             print("\nCreating recurring instances...")
-            start_date = parser.parse(data['date']).date()
-            end_date = parser.parse(recurrence_end_date).date() if recurrence_end_date else None
+            end_date = recurrence_end_date if recurrence_end_date else None
             
-            current_date = start_date
+            current_date = date
             while not end_date or current_date <= end_date:
-                if current_date.weekday() in recurrence_days and current_date != start_date:
+                if current_date.weekday() in recurrence_days and current_date != date:
                     Appointment.objects.create(
                         user=request.user,
                         title=data['title'],

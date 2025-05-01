@@ -91,6 +91,7 @@ const Timeline = () => {
         return appointments.map((appointment, index) => {
             const startPos = getTimePosition(appointment.start_time);
             const height = getAppointmentHeight(appointment.start_time, appointment.end_time);
+            const isWestermann = appointment.user === 'a.westermann.19';
             
             return (
                 <div
@@ -98,11 +99,11 @@ const Timeline = () => {
                     style={{
                         position: 'absolute',
                         top: `${startPos}px`,
-                        left: '80px',
-                        right: '10px',
+                        left: isWestermann ? '80px' : '50%',
+                        right: isWestermann ? '50%' : '10px',
                         height: `${height}px`,
-                        backgroundColor: appointment.can_watch_evee ? '#e3f2fd' : '#fce4ec',
-                        border: '1px solid #90caf9',
+                        backgroundColor: isWestermann ? '#e3f2fd' : '#e8f5e9',
+                        border: `1px solid ${isWestermann ? '#90caf9' : '#81c784'}`,
                         borderRadius: '4px',
                         padding: '4px',
                         overflow: 'hidden',
@@ -113,6 +114,15 @@ const Timeline = () => {
                     <div style={{ fontSize: '0.8em' }}>
                         {formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}
                     </div>
+                    {appointment.can_watch_evee && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            fontSize: '1.2em',
+                            color: '#f57c00'
+                        }}>★</div>
+                    )}
                 </div>
             );
         });
@@ -164,8 +174,38 @@ const Timeline = () => {
                 borderRadius: '8px',
                 overflow: 'hidden',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                position: 'relative'
             }}>
+                {/* User labels */}
+                <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '80px',
+                    width: 'calc(50% - 80px)',
+                    textAlign: 'center',
+                    padding: '5px',
+                    backgroundColor: '#e3f2fd',
+                    borderBottom: '1px solid #e0e0e0',
+                    fontWeight: 'bold',
+                    color: '#1976d2'
+                }}>
+                    a.westermann.19
+                </div>
+                <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '50%',
+                    width: 'calc(50% - 10px)',
+                    textAlign: 'center',
+                    padding: '5px',
+                    backgroundColor: '#e8f5e9',
+                    borderBottom: '1px solid #e0e0e0',
+                    fontWeight: 'bold',
+                    color: '#2e7d32'
+                }}>
+                    Ash
+                </div>
                 {hours.map(hour => {
                     const time = hour < 12 
                         ? `${hour} AM` 

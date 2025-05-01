@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Access Denied - Shared Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .access-denied-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 400px;
+            text-align: center;
+        }
+        h1 {
+            color: #d32f2f;
+            margin-top: 0;
+        }
+        .message {
+            margin: 1rem 0;
+            color: #666;
+        }
+        .username {
+            font-weight: bold;
+            color: #1976d2;
+        }
+        .home-link {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: #1976d2;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .home-link:hover {
+            background-color: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="access-denied-container">
+        <h1>Access Denied</h1>
+        <div class="message">
+            Sorry, <span class="username">{{ username }}</span>, you don't have access to the Shared Calendar.
+        </div>
+        <div class="message">
+            Only authorized users can access this page.
+        </div>
+        <a href="/" class="home-link">Return to Home</a>
+    </div>
+</body>
+</html> 

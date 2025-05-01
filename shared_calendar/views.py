@@ -22,12 +22,20 @@ def check_session(view_func):
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class CalendarView(View):
+    ALLOWED_USERS = {'a.westermann.19', 'Ash'}
+
     def get(self, request):
         if 'user' not in request.session:
-            return redirect('/login/')  # Redirect to main site's login
+            return redirect('/')  # Redirect to main site's login
+        
         username = json.loads(request.session['user'])['username']
+        if username not in self.ALLOWED_USERS:
+            return render(request, 'shared_calendar/access_denied.html', {
+                'username': username
+            })
+            
         return render(request, 'shared_calendar/calendar.html', {
-            'first_name': request.session.get('first_name', username)
+            'username': username
         })
 
 @csrf_exempt

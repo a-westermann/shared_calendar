@@ -46,6 +46,8 @@ class CalendarView(View):
 def create_appointment(request):
     try:
         print("\n=== Creating Appointment ===")
+        print("Request user:", request.user)
+        print("Request session:", request.session)
         print("Raw request body:", request.body)
         
         try:
@@ -106,6 +108,10 @@ def create_appointment(request):
             print(f"Recurrence days: {appointment.recurrence_days}")
         except Exception as e:
             print(f"Error creating appointment: {str(e)}")
+            print(f"Error type: {type(e)}")
+            import traceback
+            print("Traceback:")
+            print(traceback.format_exc())
             return JsonResponse({
                 'error': f'Error creating appointment: {str(e)}'
             }, status=400)
@@ -151,7 +157,10 @@ def create_appointment(request):
         import traceback
         print("Traceback:")
         print(traceback.format_exc())
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }, status=500)
 
 @require_GET
 @check_session

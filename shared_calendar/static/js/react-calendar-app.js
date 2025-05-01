@@ -243,13 +243,21 @@ const Timeline = () => {
             console.log('Response status:', response.status);
             console.log('Response headers:', Object.fromEntries(response.headers.entries()));
             
+            const responseText = await response.text();
+            console.log('Raw response text:', responseText);
+            
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Server error response:', errorText);
-                throw new Error(`Server error (${response.status}): ${errorText}`);
+                throw new Error(`Server error (${response.status}): ${responseText}`);
             }
             
-            const data = await response.json();
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                console.error('Error parsing JSON response:', e);
+                throw new Error(`Invalid JSON response: ${responseText}`);
+            }
+            
             console.log('Server response:', data);
             
             setShowModal(false);

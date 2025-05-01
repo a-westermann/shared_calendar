@@ -180,13 +180,18 @@ const Timeline = () => {
                 ? `/calendar/api/appointments/${editingAppointment.id}/update/`
                 : '/calendar/api/appointments/create/';
             
-            console.log('Submitting appointment data:', {
+            const submitData = {
                 title: formData.title,
                 date: formData.date,
                 start_time: formData.start_time,
                 end_time: formData.end_time,
-                can_watch_evee: formData.can_watch_evee
-            });
+                can_watch_evee: formData.can_watch_evee,
+                is_recurring: formData.is_recurring,
+                recurrence_days: formData.recurrence_days,
+                recurrence_end_date: formData.recurrence_end_date
+            };
+            
+            console.log('Submitting appointment data:', submitData);
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -194,13 +199,7 @@ const Timeline = () => {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 },
-                body: JSON.stringify({
-                    title: formData.title,
-                    date: formData.date,
-                    start_time: formData.start_time,
-                    end_time: formData.end_time,
-                    can_watch_evee: formData.can_watch_evee
-                })
+                body: JSON.stringify(submitData)
             });
             
             if (!response.ok) {
@@ -208,6 +207,9 @@ const Timeline = () => {
                 console.error('Server error response:', errorData);
                 throw new Error(errorData.message || 'Failed to save appointment');
             }
+            
+            const responseData = await response.json();
+            console.log('Server response:', responseData);
             
             setShowModal(false);
             setEditingAppointment(null);

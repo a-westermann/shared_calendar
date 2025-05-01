@@ -48,6 +48,11 @@ def create_appointment(request):
         
         data = json.loads(request.body)
         print("Parsed data:", data)
+        print("Recurrence data:", {
+            'is_recurring': data.get('is_recurring'),
+            'recurrence_days': data.get('recurrence_days'),
+            'recurrence_end_date': data.get('recurrence_end_date')
+        })
 
         required_fields = ['title', 'date', 'start_time', 'end_time', 'can_watch_evee']
         missing_fields = [field for field in required_fields if field not in data]
@@ -91,6 +96,11 @@ def create_appointment(request):
                 recurrence_end_date=data.get('recurrence_end_date')
             )
             print("Appointment created successfully:", appointment.id)
+            print("Appointment recurrence data:", {
+                'is_recurring': appointment.is_recurring,
+                'recurrence_days': appointment.recurrence_days,
+                'recurrence_end_date': appointment.recurrence_end_date
+            })
             
             # If this is a recurring appointment, create the recurring instances
             if appointment.is_recurring and appointment.recurrence_days:
@@ -99,6 +109,9 @@ def create_appointment(request):
                 
                 start_date = parser.parse(appointment.date)
                 end_date = parser.parse(appointment.recurrence_end_date) if appointment.recurrence_end_date else None
+                
+                print(f"Creating recurring appointments from {start_date} to {end_date}")
+                print(f"Recurring on days: {appointment.recurrence_days}")
                 
                 current_date = start_date + timedelta(days=1)  # Start from the next day
                 while end_date is None or current_date <= end_date:
@@ -112,7 +125,7 @@ def create_appointment(request):
                         ).exists()
                         
                         if not existing:
-                            Appointment.objects.create(
+                            recurring_appointment = Appointment.objects.create(
                                 title=appointment.title,
                                 date=current_date.date(),
                                 start_time=appointment.start_time,
@@ -123,6 +136,7 @@ def create_appointment(request):
                                 recurrence_days=appointment.recurrence_days,
                                 recurrence_end_date=appointment.recurrence_end_date
                             )
+                            print(f"Created recurring appointment for {current_date.date()}")
                     current_date += timedelta(days=1)
             
         except Exception as e:

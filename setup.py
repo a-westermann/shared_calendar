@@ -38,5 +38,6 @@ setup(
     ],
     install_requires=[
         'django>=4.2,<4.3',
+        'python-dateutil>=2.8.2',
     ],
 ) 

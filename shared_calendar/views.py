@@ -10,6 +10,7 @@ import logging
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.contrib.auth.decorators import login_required
+from django.db import models
 
 logger = logging.getLogger(__name__)
 
@@ -206,11 +207,21 @@ def get_appointments(request):
                 'message': f'Invalid date format: {date}. Must be in YYYY-MM-DD format.'
             }, status=400)
 
-        # Get appointments for both users
-        print("Fetching appointments...")
+        # Get the day of week (0 = Monday, 6 = Sunday)
+        day_of_week = parsed_date.weekday()
+        print(f"Day of week: {day_of_week}")
+
+        # Get appointments for both users that either:
+        # 1. Are on this exact date, or
+        # 2. Are recurring and include this day of the week
         appointments = Appointment.objects.filter(
-            date=parsed_date,
             user__in=['a.westermann.19', 'Ash']
+        ).filter(
+            models.Q(date=parsed_date) |  # Exact date matches
+            models.Q(  # Or it's a recurring appointment that includes this day
+                is_recurring=True,
+                recurrence_days__contains=[day_of_week]
+            )
         ).values(
             'id', 'title', 'date', 'start_time', 'end_time', 'can_watch_evee', 'user',
             'is_recurring', 'recurrence_days'

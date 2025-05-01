@@ -193,6 +193,7 @@ const Timeline = () => {
         console.log('Formatted date:', formattedDate);
         
         const submitData = {
+            user: currentUsername,
             title: formData.title,
             date: formattedDate,
             start_time: formData.start_time,
@@ -219,12 +220,14 @@ const Timeline = () => {
                 body: JSON.stringify(submitData)
             });
             
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server error response:', errorText);
+                throw new Error(errorText);
+            }
+            
             const data = await response.json();
             console.log('Server response:', data);
-            
-            if (!response.ok) {
-                throw new Error(data.error || 'Error creating appointment');
-            }
             
             setShowModal(false);
             setEditingAppointment(null);

@@ -212,7 +212,7 @@ const Timeline = () => {
                         position: 'absolute',
                         top: `${startPos}px`,
                         left: isWestermann ? '80px' : '50%',
-                        width: isWestermann ? 'calc(50% - 80px)' : 'calc(50% - 10px)',
+                        width: isWestermann ? 'calc(50% - 85px)' : 'calc(50% - 15px)',
                         height: `${height}px`,
                         backgroundColor: isWestermann ? '#e3f2fd' : '#e8f5e9',
                         border: `1px solid ${isWestermann ? '#90caf9' : '#81c784'}`,
@@ -221,7 +221,8 @@ const Timeline = () => {
                         overflow: 'hidden',
                         zIndex: 10,
                         cursor: isEditable ? 'pointer' : 'default',
-                        pointerEvents: 'auto'
+                        pointerEvents: 'auto',
+                        boxSizing: 'border-box'
                     }}
                 >
                     <div style={{ fontWeight: 'bold' }}>{appointment.title}</div>

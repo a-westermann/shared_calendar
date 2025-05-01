@@ -189,7 +189,6 @@ def update_appointment(request, appointment_id):
             appointment.can_watch_evee = data.get('can_watch_evee', appointment.can_watch_evee)
             appointment.is_recurring = data.get('is_recurring', appointment.is_recurring)
             appointment.recurrence_days = data.get('recurrence_days', appointment.recurrence_days)
-            appointment.recurrence_end_date = data.get('recurrence_end_date', appointment.recurrence_end_date)
             appointment.save()
 
             # If this is a recurring appointment, update all instances
@@ -209,12 +208,18 @@ def update_appointment(request, appointment_id):
                     recurring.end_time = appointment.end_time
                     recurring.can_watch_evee = appointment.can_watch_evee
                     recurring.recurrence_days = appointment.recurrence_days
-                    recurring.recurrence_end_date = appointment.recurrence_end_date
                     recurring.save()
 
             return JsonResponse({
                 'status': 'success',
-                'id': appointment.id
+                'id': appointment.id,
+                'title': appointment.title,
+                'date': appointment.date,
+                'start_time': appointment.start_time,
+                'end_time': appointment.end_time,
+                'can_watch_evee': appointment.can_watch_evee,
+                'is_recurring': appointment.is_recurring,
+                'recurrence_days': appointment.recurrence_days
             })
         except Appointment.DoesNotExist:
             return JsonResponse({

@@ -72,17 +72,34 @@ const Timeline = () => {
 
     const fetchAppointments = async () => {
         try {
+            console.log('Fetching appointments for date:', selectedDate);
             const response = await fetch(`/calendar/api/appointments/get/?date=${selectedDate}`, {
                 headers: {
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 }
             });
-            if (!response.ok) throw new Error('Failed to fetch appointments');
+            
+            console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server error response:', errorText);
+                throw new Error(`Failed to fetch appointments: ${errorText}`);
+            }
+            
             const data = await response.json();
-            console.log('Fetched appointments:', data.appointments);
-            setAppointments(data.appointments);
+            console.log('Fetched appointments:', data);
+            
+            if (data.status === 'error') {
+                throw new Error(data.message || 'Error fetching appointments');
+            }
+            
+            setAppointments(data.appointments || []);
         } catch (error) {
             console.error('Error fetching appointments:', error);
+            console.error('Error stack:', error.stack);
+            alert(`Error fetching appointments: ${error.message}\n\nCheck the browser console for more details.`);
         }
     };
 

@@ -157,31 +157,56 @@ def create_appointment(request):
 @check_session
 def get_appointments(request):
     try:
+        print("\n=== Getting Appointments ===")
         date = request.GET.get('date')
+        print(f"Requested date: {date}")
+        
         if not date:
+            print("No date parameter provided")
             return JsonResponse({
                 'status': 'error',
                 'message': 'Date parameter is required'
             }, status=400)
 
+        try:
+            # Validate date format
+            parsed_date = datetime.strptime(date, '%Y-%m-%d').date()
+            print(f"Parsed date: {parsed_date}")
+        except ValueError as e:
+            print(f"Invalid date format: {date}")
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Invalid date format: {date}. Must be in YYYY-MM-DD format.'
+            }, status=400)
+
         # Get appointments for both users
+        print("Fetching appointments...")
         appointments = Appointment.objects.filter(
-            date=date,
+            date=parsed_date,
             user__in=['a.westermann.19', 'Ash']
         ).values(
-            'id', 'title', 'date', 'start_time', 'end_time', 'can_watch_evee', 'user'
+            'id', 'title', 'date', 'start_time', 'end_time', 'can_watch_evee', 'user',
+            'is_recurring', 'recurrence_days'
         )
+        
+        print(f"Found {len(appointments)} appointments")
+        appointments_list = list(appointments)
+        print("Appointments:", appointments_list)
         
         return JsonResponse({
             'status': 'success',
-            'appointments': list(appointments)
+            'appointments': appointments_list
         })
     except Exception as e:
-        print("Error in get_appointments view:", str(e))
+        print(f"\nError in get_appointments view: {str(e)}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        print("Traceback:")
+        print(traceback.format_exc())
         return JsonResponse({
             'status': 'error',
             'message': str(e)
-        }, status=400)
+        }, status=500)
 
 @csrf_exempt
 @require_POST

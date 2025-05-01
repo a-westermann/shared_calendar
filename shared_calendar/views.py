@@ -59,6 +59,25 @@ def create_appointment(request):
 
         try:
             username = json.loads(request.session['user'])['username']
+            print(f"Creating appointment for user: {username}")
+            print(f"Appointment data: {data}")
+            
+            # Check if there are any existing appointments that overlap
+            existing_appointments = Appointment.objects.filter(
+                date=data['date'],
+                user=username
+            ).exclude(
+                end_time__lte=data['start_time']
+            ).exclude(
+                start_time__gte=data['end_time']
+            )
+            
+            if existing_appointments.exists():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'An appointment already exists for this time slot'
+                }, status=400)
+            
             appointment = Appointment.objects.create(
                 title=data['title'],
                 date=data['date'],

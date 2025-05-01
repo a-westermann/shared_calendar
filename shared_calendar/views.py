@@ -42,12 +42,21 @@ class CalendarView(View):
         })
 
 @require_POST
-@login_required
 def create_appointment(request):
     try:
         print("\n=== Creating Appointment ===")
         print("Request user:", request.user)
         print("Request session:", request.session)
+        print("Request headers:", request.headers)
+        
+        # Check if user is authenticated
+        if not request.user.is_authenticated:
+            print("User not authenticated")
+            return JsonResponse({
+                'error': 'Authentication required',
+                'redirect': '/accounts/login/'
+            }, status=401)
+            
         print("Raw request body:", request.body)
         
         try:

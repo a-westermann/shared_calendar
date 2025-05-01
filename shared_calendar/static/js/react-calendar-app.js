@@ -237,6 +237,7 @@ const Timeline = () => {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 },
+                credentials: 'include',  // Important for session cookies
                 body: JSON.stringify(submitData)
             });
             
@@ -245,6 +246,19 @@ const Timeline = () => {
             
             const responseText = await response.text();
             console.log('Raw response text:', responseText);
+            
+            if (response.status === 401) {
+                // Handle authentication error
+                try {
+                    const errorData = JSON.parse(responseText);
+                    if (errorData.redirect) {
+                        window.location.href = errorData.redirect;
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Error parsing auth error response:', e);
+                }
+            }
             
             if (!response.ok) {
                 throw new Error(`Server error (${response.status}): ${responseText}`);

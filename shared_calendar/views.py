@@ -76,7 +76,7 @@ def create_appointment(request):
         recurrence_days = data.get('recurrence_days', [])
         recurrence_end_date = data.get('recurrence_end_date')
         
-        if is_recurring and recurrence_end_date:
+        if is_recurring and recurrence_end_date and recurrence_end_date.strip():
             try:
                 recurrence_end_date = datetime.strptime(recurrence_end_date, '%Y-%m-%d').date()
                 print(f"Successfully parsed recurrence end date: {recurrence_end_date}")
@@ -85,6 +85,9 @@ def create_appointment(request):
                 return JsonResponse({
                     'error': f'Invalid recurrence end date format: {recurrence_end_date}. Must be in YYYY-MM-DD format.'
                 }, status=400)
+        else:
+            recurrence_end_date = None
+            print("No recurrence end date provided or empty string")
         
         print("\nRecurrence details:")
         print(f"is_recurring: {is_recurring}")

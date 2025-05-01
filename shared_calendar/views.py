@@ -211,24 +211,25 @@ def get_appointments(request):
         day_of_week = parsed_date.weekday()
         print(f"Day of week: {day_of_week}")
 
-        # Get appointments for both users that either:
-        # 1. Are on this exact date, or
-        # 2. Are recurring and include this day of the week
-        appointments = Appointment.objects.filter(
+        # Get all appointments for both users
+        all_appointments = Appointment.objects.filter(
             user__in=['a.westermann.19', 'Ash']
-        ).filter(
-            models.Q(date=parsed_date) |  # Exact date matches
-            models.Q(  # Or it's a recurring appointment that includes this day
-                is_recurring=True,
-                recurrence_days__contains=[day_of_week]
-            )
         ).values(
             'id', 'title', 'date', 'start_time', 'end_time', 'can_watch_evee', 'user',
             'is_recurring', 'recurrence_days'
         )
         
-        print(f"Found {len(appointments)} appointments")
-        appointments_list = list(appointments)
+        # Filter appointments in Python instead of SQL
+        appointments_list = []
+        for appointment in all_appointments:
+            # Check if it's a recurring appointment that includes this day
+            if appointment['is_recurring'] and day_of_week in appointment['recurrence_days']:
+                appointments_list.append(appointment)
+            # Or if it's on this exact date
+            elif appointment['date'] == parsed_date:
+                appointments_list.append(appointment)
+        
+        print(f"Found {len(appointments_list)} appointments")
         print("Appointments:", appointments_list)
         
         return JsonResponse({

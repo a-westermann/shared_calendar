@@ -113,6 +113,7 @@ def create_appointment(request):
         print(f"Date: {appointment.date}")
         print(f"Recurring: {appointment.is_recurring}")
         print(f"Recurrence days: {appointment.recurrence_days}")
+        print(f"Recurrence end date: {appointment.recurrence_end_date}")
         
         # If recurring, create additional instances
         if is_recurring and recurrence_days:
@@ -122,7 +123,7 @@ def create_appointment(request):
             current_date = date
             while not end_date or current_date <= end_date:
                 if current_date.weekday() in recurrence_days and current_date != date:
-                    Appointment.objects.create(
+                    recurring_appointment = Appointment.objects.create(
                         user=request.user,
                         title=data['title'],
                         date=current_date,
@@ -145,7 +146,8 @@ def create_appointment(request):
             'can_watch_evee': appointment.can_watch_evee,
             'is_recurring': appointment.is_recurring,
             'recurrence_days': appointment.recurrence_days,
-            'recurrence_end_date': appointment.recurrence_end_date
+            'recurrence_end_date': appointment.recurrence_end_date,
+            'user': appointment.user
         })
     except Exception as e:
         print(f"\nError creating appointment: {str(e)}")

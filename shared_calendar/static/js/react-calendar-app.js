@@ -138,9 +138,11 @@ const Timeline = () => {
 
     const handleAppointmentClick = (appointment) => {
         console.log('Appointment clicked:', appointment);
-        console.log('Current username:', currentUsername);
-        console.log('Appointment user:', appointment.user);
-        console.log('Is editable:', appointment.user === currentUsername);
+        console.log('Recurrence data:', {
+            is_recurring: appointment.is_recurring,
+            recurrence_days: appointment.recurrence_days,
+            recurrence_end_date: appointment.recurrence_end_date
+        });
         
         if (appointment.user === currentUsername) {
             setEditingAppointment(appointment);

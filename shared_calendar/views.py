@@ -5,12 +5,14 @@ from django.views.decorators.http import require_POST, require_GET
 from django.views import View
 from django.utils.decorators import method_decorator
 import json
-from .models import Appointment
+from .models import Appointment, PushSubscription
 import logging
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.contrib.auth.decorators import login_required
 from django.db import models
+from .notifications import send_notification
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +111,7 @@ def create_appointment(request):
         # Create the initial appointment
         try:
             appointment = Appointment.objects.create(
-                user=username,  # Use the username from session
+                user=username,
                 title=data['title'],
                 date=date,
                 start_time=data['start_time'],
@@ -118,6 +120,18 @@ def create_appointment(request):
                 is_recurring=is_recurring,
                 recurrence_days=recurrence_days
             )
+            
+            # Send notification
+            send_notification(
+                title="New Appointment",
+                body=f"{username} created a new appointment: {data['title']}",
+                data={
+                    'type': 'appointment_created',
+                    'appointment_id': str(appointment.id),
+                    'user': username
+                }
+            )
+            
             print("\nCreated initial appointment:")
             print(f"ID: {appointment.id}")
             print(f"User: {appointment.user}")
@@ -273,6 +287,17 @@ def update_appointment(request, appointment_id):
             appointment.is_recurring = data.get('is_recurring', appointment.is_recurring)
             appointment.recurrence_days = data.get('recurrence_days', appointment.recurrence_days)
             appointment.save()
+            
+            # Send notification
+            send_notification(
+                title="Appointment Updated",
+                body=f"{appointment.user} updated appointment: {appointment.title}",
+                data={
+                    'type': 'appointment_updated',
+                    'appointment_id': str(appointment.id),
+                    'user': appointment.user
+                }
+            )
 
             # If this is a recurring appointment, update all instances
             if appointment.is_recurring and appointment.recurrence_days:
@@ -330,7 +355,24 @@ def delete_appointment(request, appointment_id):
                     'message': 'Not authorized to delete this appointment'
                 }, status=403)
 
+            # Get appointment details before deleting
+            appointment_title = appointment.title
+            appointment_user = appointment.user
+            
+            # Delete the appointment
             appointment.delete()
+            
+            # Send notification
+            send_notification(
+                title="Appointment Deleted",
+                body=f"{appointment_user} deleted appointment: {appointment_title}",
+                data={
+                    'type': 'appointment_deleted',
+                    'appointment_id': str(appointment_id),
+                    'user': appointment_user
+                }
+            )
+
             return JsonResponse({
                 'status': 'success'
             })
@@ -345,3 +387,44 @@ def delete_appointment(request, appointment_id):
             'status': 'error',
             'message': str(e)
         }, status=400)
+
+@require_POST
+@csrf_exempt
+def subscribe_to_notifications(request):
+    try:
+        data = json.loads(request.body)
+        subscription_info = data.get('subscription')
+        
+        if not subscription_info:
+            return JsonResponse({'error': 'No subscription info provided'}, status=400)
+        
+        # Create or update subscription
+        subscription, created = PushSubscription.objects.update_or_create(
+            user=request.user,
+            defaults={
+                'subscription_info': subscription_info,
+                'active': True
+            }
+        )
+        
+        return JsonResponse({'status': 'success', 'created': created})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@require_POST
+@csrf_exempt
+def unsubscribe_from_notifications(request):
+    try:
+        PushSubscription.objects.filter(user=request.user).update(active=False)
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@require_GET
+def get_vapid_public_key(request):
+    """
+    Return the VAPID public key to the frontend.
+    """
+    return JsonResponse({
+        'publicKey': settings.WEBPUSH_SETTINGS['VAPID_PUBLIC_KEY']
+    })

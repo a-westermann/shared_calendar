@@ -26,3 +26,14 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"{self.title} on {self.date} from {self.start_time} to {self.end_time}"
+
+
+class PushSubscription(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    subscription_info = models.JSONField()
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Push subscription for {self.user.username}"

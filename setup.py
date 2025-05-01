@@ -37,7 +37,8 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
-        'django>=4.2,<4.3',
+        'Django>=4.2.0',
         'python-dateutil>=2.8.2',
+        'firebase-admin>=6.2.0',
     ],
 ) 

@@ -119,6 +119,11 @@ const Timeline = () => {
     };
 
     const handleAppointmentClick = (appointment) => {
+        console.log('Appointment clicked:', appointment);
+        console.log('Current username:', currentUsername);
+        console.log('Appointment user:', appointment.user);
+        console.log('Is editable:', appointment.user === currentUsername);
+        
         if (appointment.user === currentUsername) {
             setEditingAppointment(appointment);
             setFormData({

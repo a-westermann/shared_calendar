@@ -219,13 +219,12 @@ const Timeline = () => {
                 body: JSON.stringify(submitData)
             });
             
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Error creating appointment');
-            }
-            
             const data = await response.json();
             console.log('Server response:', data);
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Error creating appointment');
+            }
             
             setShowModal(false);
             setEditingAppointment(null);

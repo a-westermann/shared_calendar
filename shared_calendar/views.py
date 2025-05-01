@@ -47,15 +47,7 @@ def create_appointment(request):
     try:
         print("\n=== Creating Appointment ===")
         print("Raw request body:", request.body)
-        
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError as e:
-            print(f"JSON decode error: {str(e)}")
-            return JsonResponse({
-                'error': 'Invalid JSON data'
-            }, status=400)
-            
+        data = json.loads(request.body)
         print("Parsed data:", data)
         
         # Validate required fields

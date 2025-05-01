@@ -150,6 +150,14 @@ const Timeline = () => {
             });
             if (!response.ok) throw new Error('Failed to delete appointment');
             setShowModal(false);
+            setEditingAppointment(null);  // Clear the editing state
+            setFormData({  // Reset the form data
+                title: currentUsername || '',
+                date: new Date().toISOString().split('T')[0],
+                start_time: '',
+                end_time: '',
+                can_watch_evee: false
+            });
             fetchAppointments();
         } catch (error) {
             console.error('Error deleting appointment:', error);

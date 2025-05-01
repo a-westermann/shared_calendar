@@ -63,6 +63,7 @@ const Timeline = () => {
             });
             if (!response.ok) throw new Error('Failed to fetch appointments');
             const data = await response.json();
+            console.log('Fetched appointments:', data.appointments);
             setAppointments(data.appointments);
         } catch (error) {
             console.error('Error fetching appointments:', error);
@@ -187,6 +188,7 @@ const Timeline = () => {
 
     const renderAppointments = () => {
         const overlappingAppointments = detectOverlaps(appointments);
+        console.log('Rendering appointments:', appointments);
         
         return appointments.map((appointment, index) => {
             const startPos = getTimePosition(appointment.start_time);
@@ -194,6 +196,13 @@ const Timeline = () => {
             const isWestermann = appointment.user === 'a.westermann.19';
             const isOverlapping = overlappingAppointments.has(appointment.id);
             const isEditable = appointment.user === currentUsername;
+            
+            console.log('Rendering appointment:', {
+                id: appointment.id,
+                user: appointment.user,
+                currentUsername,
+                isEditable
+            });
             
             return (
                 <div

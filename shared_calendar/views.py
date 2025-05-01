@@ -103,12 +103,12 @@ def get_appointments(request):
                 'message': 'Date parameter is required'
             }, status=400)
 
-        username = json.loads(request.session['user'])['username']
+        # Get appointments for both users
         appointments = Appointment.objects.filter(
             date=date,
-            user=username
+            user__in=['a.westermann.19', 'Ash']
         ).values(
-            'id', 'title', 'date', 'start_time', 'end_time', 'can_watch_evee'
+            'id', 'title', 'date', 'start_time', 'end_time', 'can_watch_evee', 'user'
         )
         
         return JsonResponse({

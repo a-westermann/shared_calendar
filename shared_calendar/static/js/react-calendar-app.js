@@ -163,6 +163,14 @@ const Timeline = () => {
                 ? `/calendar/api/appointments/${editingAppointment.id}/update/`
                 : '/calendar/api/appointments/create/';
             
+            console.log('Submitting appointment data:', {
+                title: formData.title,
+                date: formData.date,
+                start_time: formData.start_time,
+                end_time: formData.end_time,
+                can_watch_evee: formData.can_watch_evee
+            });
+            
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -177,12 +185,19 @@ const Timeline = () => {
                     can_watch_evee: formData.can_watch_evee
                 })
             });
-            if (!response.ok) throw new Error('Failed to save appointment');
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Server error response:', errorData);
+                throw new Error(errorData.message || 'Failed to save appointment');
+            }
+            
             setShowModal(false);
             setEditingAppointment(null);
             fetchAppointments();
         } catch (error) {
             console.error('Error saving appointment:', error);
+            alert(`Error: ${error.message}`);
         }
     };
 

@@ -211,6 +211,9 @@ const Timeline = () => {
                 ? `/calendar/api/appointments/${editingAppointment.id}/update/`
                 : '/calendar/api/appointments/create/';
             
+            console.log('Making request to:', url);
+            console.log('CSRF Token:', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -220,10 +223,13 @@ const Timeline = () => {
                 body: JSON.stringify(submitData)
             });
             
+            console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+            
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Server error response:', errorText);
-                throw new Error(errorText);
+                throw new Error(`Server error (${response.status}): ${errorText}`);
             }
             
             const data = await response.json();
@@ -234,7 +240,8 @@ const Timeline = () => {
             fetchAppointments();
         } catch (error) {
             console.error('Error details:', error);
-            alert(error.message);
+            console.error('Error stack:', error.stack);
+            alert(`Error: ${error.message}\n\nCheck the browser console for more details.`);
         }
     };
 

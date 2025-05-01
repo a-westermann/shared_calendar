@@ -58,7 +58,7 @@ def create_appointment(request):
             }, status=400)
         
         # Validate required fields
-        required_fields = ['title', 'date', 'start_time', 'end_time']
+        required_fields = ['user', 'title', 'date', 'start_time', 'end_time']
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             print(f"Missing required fields: {missing_fields}")
@@ -86,23 +86,29 @@ def create_appointment(request):
         print(f"recurrence_days: {recurrence_days}")
         
         # Create the initial appointment
-        appointment = Appointment.objects.create(
-            user=request.user.username,
-            title=data['title'],
-            date=date,
-            start_time=data['start_time'],
-            end_time=data['end_time'],
-            can_watch_evee=data.get('can_watch_evee', False),
-            is_recurring=is_recurring,
-            recurrence_days=recurrence_days
-        )
-        
-        print("\nCreated initial appointment:")
-        print(f"ID: {appointment.id}")
-        print(f"Title: {appointment.title}")
-        print(f"Date: {appointment.date}")
-        print(f"Recurring: {appointment.is_recurring}")
-        print(f"Recurrence days: {appointment.recurrence_days}")
+        try:
+            appointment = Appointment.objects.create(
+                user=data['user'],
+                title=data['title'],
+                date=date,
+                start_time=data['start_time'],
+                end_time=data['end_time'],
+                can_watch_evee=data.get('can_watch_evee', False),
+                is_recurring=is_recurring,
+                recurrence_days=recurrence_days
+            )
+            print("\nCreated initial appointment:")
+            print(f"ID: {appointment.id}")
+            print(f"User: {appointment.user}")
+            print(f"Title: {appointment.title}")
+            print(f"Date: {appointment.date}")
+            print(f"Recurring: {appointment.is_recurring}")
+            print(f"Recurrence days: {appointment.recurrence_days}")
+        except Exception as e:
+            print(f"Error creating appointment: {str(e)}")
+            return JsonResponse({
+                'error': f'Error creating appointment: {str(e)}'
+            }, status=400)
         
         # If recurring, create additional instances for the next 6 months
         if is_recurring and recurrence_days:
@@ -112,21 +118,25 @@ def create_appointment(request):
             current_date = date
             while current_date <= end_date:
                 if current_date.weekday() in recurrence_days and current_date != date:
-                    Appointment.objects.create(
-                        user=request.user.username,
-                        title=data['title'],
-                        date=current_date,
-                        start_time=data['start_time'],
-                        end_time=data['end_time'],
-                        can_watch_evee=data.get('can_watch_evee', False),
-                        is_recurring=True,
-                        recurrence_days=recurrence_days
-                    )
-                    print(f"Created recurring instance for {current_date}")
+                    try:
+                        Appointment.objects.create(
+                            user=data['user'],
+                            title=data['title'],
+                            date=current_date,
+                            start_time=data['start_time'],
+                            end_time=data['end_time'],
+                            can_watch_evee=data.get('can_watch_evee', False),
+                            is_recurring=True,
+                            recurrence_days=recurrence_days
+                        )
+                        print(f"Created recurring instance for {current_date}")
+                    except Exception as e:
+                        print(f"Error creating recurring instance for {current_date}: {str(e)}")
                 current_date += timedelta(days=1)
         
         return JsonResponse({
             'id': appointment.id,
+            'user': appointment.user,
             'title': appointment.title,
             'date': appointment.date,
             'start_time': appointment.start_time,
@@ -136,8 +146,12 @@ def create_appointment(request):
             'recurrence_days': appointment.recurrence_days
         })
     except Exception as e:
-        print(f"\nError creating appointment: {str(e)}")
-        return JsonResponse({'error': str(e)}, status=400)
+        print(f"\nError in create_appointment view: {str(e)}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        print("Traceback:")
+        print(traceback.format_exc())
+        return JsonResponse({'error': str(e)}, status=500)
 
 @require_GET
 @check_session

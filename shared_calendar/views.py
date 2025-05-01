@@ -7,6 +7,8 @@ from django.utils.decorators import method_decorator
 import json
 from .models import Appointment
 import logging
+from datetime import datetime, timedelta
+from dateutil import parser
 
 logger = logging.getLogger(__name__)
 
@@ -43,125 +45,78 @@ class CalendarView(View):
 @check_session
 def create_appointment(request):
     try:
-        print("Session data:", request.session)
-        print("Raw request body:", request.body)
-        
+        print("\n=== Creating Appointment ===")
+        print("Request data:", request.body)
         data = json.loads(request.body)
         print("Parsed data:", data)
-        print("Recurrence data:", {
-            'is_recurring': data.get('is_recurring'),
-            'recurrence_days': data.get('recurrence_days'),
-            'recurrence_end_date': data.get('recurrence_end_date')
-        })
-
-        required_fields = ['title', 'date', 'start_time', 'end_time', 'can_watch_evee']
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            return JsonResponse({
-                'status': 'error',
-                'message': f'Missing required fields: {", ".join(missing_fields)}'
-            }, status=400)
-
-        try:
-            username = json.loads(request.session['user'])['username']
-            print(f"Creating appointment for user: {username}")
-            print(f"Appointment data: {data}")
+        
+        # Extract recurrence data
+        is_recurring = data.get('is_recurring', False)
+        recurrence_days = data.get('recurrence_days', [])
+        recurrence_end_date = data.get('recurrence_end_date')
+        
+        print("\nRecurrence details:")
+        print(f"is_recurring: {is_recurring}")
+        print(f"recurrence_days: {recurrence_days}")
+        print(f"recurrence_end_date: {recurrence_end_date}")
+        
+        # Create the initial appointment
+        appointment = Appointment.objects.create(
+            user=request.user,
+            title=data['title'],
+            date=data['date'],
+            start_time=data['start_time'],
+            end_time=data['end_time'],
+            can_watch_evee=data.get('can_watch_evee', False),
+            is_recurring=is_recurring,
+            recurrence_days=recurrence_days,
+            recurrence_end_date=recurrence_end_date
+        )
+        
+        print("\nCreated initial appointment:")
+        print(f"ID: {appointment.id}")
+        print(f"Title: {appointment.title}")
+        print(f"Date: {appointment.date}")
+        print(f"Recurring: {appointment.is_recurring}")
+        print(f"Recurrence days: {appointment.recurrence_days}")
+        
+        # If recurring, create additional instances
+        if is_recurring and recurrence_days:
+            print("\nCreating recurring instances...")
+            start_date = parser.parse(data['date']).date()
+            end_date = parser.parse(recurrence_end_date).date() if recurrence_end_date else None
             
-            # Check if there are any existing appointments that overlap
-            existing_appointments = Appointment.objects.filter(
-                date=data['date'],
-                user=username
-            ).exclude(
-                end_time__lte=data['start_time']
-            ).exclude(
-                start_time__gte=data['end_time']
-            )
-            
-            if existing_appointments.exists():
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'An appointment already exists for this time slot'
-                }, status=400)
-            
-            # Create the initial appointment
-            appointment = Appointment.objects.create(
-                title=data['title'],
-                date=data['date'],
-                start_time=data['start_time'],
-                end_time=data['end_time'],
-                can_watch_evee=data['can_watch_evee'],
-                user=username,
-                is_recurring=data.get('is_recurring', False),
-                recurrence_days=data.get('recurrence_days', []),
-                recurrence_end_date=data.get('recurrence_end_date')
-            )
-            print("Appointment created successfully:", appointment.id)
-            print("Appointment recurrence data:", {
-                'is_recurring': appointment.is_recurring,
-                'recurrence_days': appointment.recurrence_days,
-                'recurrence_end_date': appointment.recurrence_end_date
-            })
-            
-            # If this is a recurring appointment, create the recurring instances
-            if appointment.is_recurring and appointment.recurrence_days:
-                from datetime import datetime, timedelta
-                from dateutil import parser
-                
-                start_date = parser.parse(appointment.date)
-                end_date = parser.parse(appointment.recurrence_end_date) if appointment.recurrence_end_date else None
-                
-                print(f"Creating recurring appointments from {start_date} to {end_date}")
-                print(f"Recurring on days: {appointment.recurrence_days}")
-                
-                current_date = start_date + timedelta(days=1)  # Start from the next day
-                while end_date is None or current_date <= end_date:
-                    if current_date.weekday() in appointment.recurrence_days:
-                        # Check for existing appointments on this date
-                        existing = Appointment.objects.filter(
-                            date=current_date.date(),
-                            user=username,
-                            start_time=appointment.start_time,
-                            end_time=appointment.end_time
-                        ).exists()
-                        
-                        if not existing:
-                            recurring_appointment = Appointment.objects.create(
-                                title=appointment.title,
-                                date=current_date.date(),
-                                start_time=appointment.start_time,
-                                end_time=appointment.end_time,
-                                can_watch_evee=appointment.can_watch_evee,
-                                user=username,
-                                is_recurring=True,
-                                recurrence_days=appointment.recurrence_days,
-                                recurrence_end_date=appointment.recurrence_end_date
-                            )
-                            print(f"Created recurring appointment for {current_date.date()}")
-                    current_date += timedelta(days=1)
-            
-        except Exception as e:
-            print("Error creating appointment:", str(e))
-            return JsonResponse({
-                'status': 'error',
-                'message': f'Error creating appointment: {str(e)}'
-            }, status=400)
+            current_date = start_date
+            while not end_date or current_date <= end_date:
+                if current_date.weekday() in recurrence_days and current_date != start_date:
+                    Appointment.objects.create(
+                        user=request.user,
+                        title=data['title'],
+                        date=current_date,
+                        start_time=data['start_time'],
+                        end_time=data['end_time'],
+                        can_watch_evee=data.get('can_watch_evee', False),
+                        is_recurring=True,
+                        recurrence_days=recurrence_days,
+                        recurrence_end_date=recurrence_end_date
+                    )
+                    print(f"Created recurring instance for {current_date}")
+                current_date += timedelta(days=1)
         
         return JsonResponse({
-            'status': 'success',
-            'id': appointment.id
+            'id': appointment.id,
+            'title': appointment.title,
+            'date': appointment.date,
+            'start_time': appointment.start_time,
+            'end_time': appointment.end_time,
+            'can_watch_evee': appointment.can_watch_evee,
+            'is_recurring': appointment.is_recurring,
+            'recurrence_days': appointment.recurrence_days,
+            'recurrence_end_date': appointment.recurrence_end_date
         })
-    except json.JSONDecodeError as e:
-        print("JSON decode error:", str(e))
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Invalid JSON data'
-        }, status=400)
     except Exception as e:
-        print("Unexpected error:", str(e))
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=400)
+        print(f"\nError creating appointment: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)
 
 @require_GET
 @check_session
@@ -223,12 +178,6 @@ def update_appointment(request, appointment_id):
 
             # If this is a recurring appointment, update all instances
             if appointment.is_recurring and appointment.recurrence_days:
-                from datetime import datetime, timedelta
-                from dateutil import parser
-                
-                start_date = parser.parse(appointment.date)
-                end_date = parser.parse(appointment.recurrence_end_date) if appointment.recurrence_end_date else None
-                
                 # Update all instances of this recurring appointment
                 recurring_appointments = Appointment.objects.filter(
                     title=appointment.title,

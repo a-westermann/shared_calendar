@@ -175,23 +175,29 @@ const Timeline = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        const submitData = {
+            title: formData.title,
+            date: formData.date,
+            start_time: formData.start_time,
+            end_time: formData.end_time,
+            can_watch_evee: formData.can_watch_evee,
+            is_recurring: formData.is_recurring,
+            recurrence_days: formData.recurrence_days,
+            recurrence_end_date: formData.recurrence_end_date
+        };
+
+        console.log('Submitting appointment data:', submitData);
+        console.log('Recurring data:', {
+            is_recurring: formData.is_recurring,
+            recurrence_days: formData.recurrence_days,
+            recurrence_end_date: formData.recurrence_end_date
+        });
+
         try {
             const url = editingAppointment 
                 ? `/calendar/api/appointments/${editingAppointment.id}/update/`
                 : '/calendar/api/appointments/create/';
-            
-            const submitData = {
-                title: formData.title,
-                date: formData.date,
-                start_time: formData.start_time,
-                end_time: formData.end_time,
-                can_watch_evee: formData.can_watch_evee,
-                is_recurring: formData.is_recurring,
-                recurrence_days: formData.recurrence_days,
-                recurrence_end_date: formData.recurrence_end_date
-            };
-            
-            console.log('Submitting appointment data:', submitData);
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -202,21 +208,19 @@ const Timeline = () => {
                 body: JSON.stringify(submitData)
             });
             
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Server error response:', errorData);
-                throw new Error(errorData.message || 'Failed to save appointment');
-            }
+            const data = await response.json();
+            console.log('Server response:', data);
             
-            const responseData = await response.json();
-            console.log('Server response:', responseData);
+            if (!response.ok) {
+                throw new Error(data.error || 'Error creating appointment');
+            }
             
             setShowModal(false);
             setEditingAppointment(null);
             fetchAppointments();
         } catch (error) {
-            console.error('Error saving appointment:', error);
-            alert(`Error: ${error.message}`);
+            console.error('Error details:', error);
+            alert(error.message);
         }
     };
 

@@ -26,8 +26,7 @@ const Timeline = () => {
             end_time: formatTime(nextHour + 1),
             can_watch_evee: false,
             is_recurring: false,
-            recurrence_days: [],
-            recurrence_end_date: ''
+            recurrence_days: []
         };
     });
     const [errors, setErrors] = React.useState({});
@@ -138,11 +137,9 @@ const Timeline = () => {
 
     const handleAppointmentClick = (appointment) => {
         console.log('Appointment clicked:', appointment);
-        console.log('Recurrence data:', {
-            is_recurring: appointment.is_recurring,
-            recurrence_days: appointment.recurrence_days,
-            recurrence_end_date: appointment.recurrence_end_date
-        });
+        console.log('Current username:', currentUsername);
+        console.log('Appointment user:', appointment.user);
+        console.log('Is editable:', appointment.user === currentUsername);
         
         if (appointment.user === currentUsername) {
             setEditingAppointment(appointment);
@@ -153,8 +150,7 @@ const Timeline = () => {
                 end_time: appointment.end_time,
                 can_watch_evee: appointment.can_watch_evee,
                 is_recurring: appointment.is_recurring || false,
-                recurrence_days: appointment.recurrence_days || [],
-                recurrence_end_date: appointment.recurrence_end_date || ''
+                recurrence_days: appointment.recurrence_days || []
             });
             setShowModal(true);
         }
@@ -180,8 +176,7 @@ const Timeline = () => {
                 end_time: formatTime(new Date().getHours() + 2),
                 can_watch_evee: false,
                 is_recurring: false,
-                recurrence_days: [],
-                recurrence_end_date: ''
+                recurrence_days: []
             });
             fetchAppointments();
         } catch (error) {
@@ -204,8 +199,7 @@ const Timeline = () => {
             end_time: formData.end_time,
             can_watch_evee: formData.can_watch_evee,
             is_recurring: formData.is_recurring,
-            recurrence_days: formData.recurrence_days,
-            recurrence_end_date: formData.recurrence_end_date
+            recurrence_days: formData.recurrence_days
         };
 
         console.log('Submitting appointment data:', submitData);
@@ -675,47 +669,29 @@ const Timeline = () => {
                             </div>
 
                             {formData.is_recurring && (
-                                <>
-                                    <div style={{ marginBottom: '15px' }}>
-                                        <label style={{ display: 'block', marginBottom: '5px' }}>Recur on Days</label>
-                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => (
-                                                <button
-                                                    key={day}
-                                                    type="button"
-                                                    onClick={() => toggleRecurrenceDay(index)}
-                                                    style={{
-                                                        padding: '8px 12px',
-                                                        borderRadius: '4px',
-                                                        border: `1px solid ${formData.recurrence_days.includes(index) ? '#1976d2' : '#ddd'}`,
-                                                        backgroundColor: formData.recurrence_days.includes(index) ? '#1976d2' : 'white',
-                                                        color: formData.recurrence_days.includes(index) ? 'white' : '#333',
-                                                        cursor: 'pointer',
-                                                        minWidth: '100px'
-                                                    }}
-                                                >
-                                                    {day}
-                                                </button>
-                                            ))}
-                                        </div>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', marginBottom: '5px' }}>Recur on Days</label>
+                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => (
+                                            <button
+                                                key={day}
+                                                type="button"
+                                                onClick={() => toggleRecurrenceDay(index)}
+                                                style={{
+                                                    padding: '8px 12px',
+                                                    borderRadius: '4px',
+                                                    border: `1px solid ${formData.recurrence_days.includes(index) ? '#1976d2' : '#ddd'}`,
+                                                    backgroundColor: formData.recurrence_days.includes(index) ? '#1976d2' : 'white',
+                                                    color: formData.recurrence_days.includes(index) ? 'white' : '#333',
+                                                    cursor: 'pointer',
+                                                    minWidth: '100px'
+                                                }}
+                                            >
+                                                {day}
+                                            </button>
+                                        ))}
                                     </div>
-
-                                    <div style={{ marginBottom: '15px' }}>
-                                        <label style={{ display: 'block', marginBottom: '5px' }}>Recur Until</label>
-                                        <input
-                                            type="date"
-                                            name="recurrence_end_date"
-                                            value={formData.recurrence_end_date}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, recurrence_end_date: e.target.value }))}
-                                            style={{
-                                                width: '100%',
-                                                padding: '8px',
-                                                borderRadius: '4px',
-                                                border: '1px solid #ddd'
-                                            }}
-                                        />
-                                    </div>
-                                </>
+                                </div>
                             )}
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>

@@ -41,9 +41,8 @@ class CalendarView(View):
             'username': username
         })
 
-@csrf_exempt
 @require_POST
-@check_session
+@login_required
 def create_appointment(request):
     try:
         print("\n=== Creating Appointment ===")
@@ -74,25 +73,10 @@ def create_appointment(request):
         # Extract recurrence data
         is_recurring = data.get('is_recurring', False)
         recurrence_days = data.get('recurrence_days', [])
-        recurrence_end_date = data.get('recurrence_end_date')
-        
-        if is_recurring and recurrence_end_date and recurrence_end_date.strip():
-            try:
-                recurrence_end_date = datetime.strptime(recurrence_end_date, '%Y-%m-%d').date()
-                print(f"Successfully parsed recurrence end date: {recurrence_end_date}")
-            except ValueError as e:
-                print(f"Recurrence end date parsing error: {str(e)}")
-                return JsonResponse({
-                    'error': f'Invalid recurrence end date format: {recurrence_end_date}. Must be in YYYY-MM-DD format.'
-                }, status=400)
-        else:
-            recurrence_end_date = None
-            print("No recurrence end date provided or empty string")
         
         print("\nRecurrence details:")
         print(f"is_recurring: {is_recurring}")
         print(f"recurrence_days: {recurrence_days}")
-        print(f"recurrence_end_date: {recurrence_end_date}")
         
         # Create the initial appointment
         appointment = Appointment.objects.create(
@@ -104,7 +88,7 @@ def create_appointment(request):
             can_watch_evee=data.get('can_watch_evee', False),
             is_recurring=is_recurring,
             recurrence_days=recurrence_days,
-            recurrence_end_date=recurrence_end_date
+            recurrence_end_date=None
         )
         
         print("\nCreated initial appointment:")
@@ -113,17 +97,16 @@ def create_appointment(request):
         print(f"Date: {appointment.date}")
         print(f"Recurring: {appointment.is_recurring}")
         print(f"Recurrence days: {appointment.recurrence_days}")
-        print(f"Recurrence end date: {appointment.recurrence_end_date}")
         
-        # If recurring, create additional instances
+        # If recurring, create additional instances for the next 6 months
         if is_recurring and recurrence_days:
             print("\nCreating recurring instances...")
-            end_date = recurrence_end_date if recurrence_end_date else None
+            end_date = date + timedelta(days=180)  # Create instances for 6 months
             
             current_date = date
-            while not end_date or current_date <= end_date:
+            while current_date <= end_date:
                 if current_date.weekday() in recurrence_days and current_date != date:
-                    recurring_appointment = Appointment.objects.create(
+                    Appointment.objects.create(
                         user=request.user,
                         title=data['title'],
                         date=current_date,
@@ -132,7 +115,7 @@ def create_appointment(request):
                         can_watch_evee=data.get('can_watch_evee', False),
                         is_recurring=True,
                         recurrence_days=recurrence_days,
-                        recurrence_end_date=recurrence_end_date
+                        recurrence_end_date=None
                     )
                     print(f"Created recurring instance for {current_date}")
                 current_date += timedelta(days=1)
@@ -145,78 +128,41 @@ def create_appointment(request):
             'end_time': appointment.end_time,
             'can_watch_evee': appointment.can_watch_evee,
             'is_recurring': appointment.is_recurring,
-            'recurrence_days': appointment.recurrence_days,
-            'recurrence_end_date': appointment.recurrence_end_date,
-            'user': appointment.user
+            'recurrence_days': appointment.recurrence_days
         })
     except Exception as e:
         print(f"\nError creating appointment: {str(e)}")
         return JsonResponse({'error': str(e)}, status=400)
 
 @require_GET
-@login_required
+@check_session
 def get_appointments(request):
     try:
         date = request.GET.get('date')
         if not date:
             return JsonResponse({
-                'error': 'Date parameter is required'
-            }, status=400)
-
-        # Validate date format
-        try:
-            date_obj = datetime.strptime(date, '%Y-%m-%d').date()
-        except ValueError:
-            return JsonResponse({
-                'error': f'Invalid date format: {date}. Must be in YYYY-MM-DD format.'
+                'status': 'error',
+                'message': 'Date parameter is required'
             }, status=400)
 
         # Get appointments for both users
         appointments = Appointment.objects.filter(
-            date=date_obj,
+            date=date,
             user__in=['a.westermann.19', 'Ash']
         ).values(
-            'id', 'title', 'date', 'start_time', 'end_time', 
-            'can_watch_evee', 'user', 'is_recurring', 
-            'recurrence_days', 'recurrence_end_date'
+            'id', 'title', 'date', 'start_time', 'end_time', 'can_watch_evee', 'user'
         )
         
-        # Convert the queryset to a list and handle any potential serialization issues
-        appointments_list = []
-        for appointment in appointments:
-            try:
-                # Ensure all fields are properly formatted
-                appointment_data = {
-                    'id': appointment['id'],
-                    'title': appointment['title'],
-                    'date': appointment['date'].strftime('%Y-%m-%d'),
-                    'start_time': appointment['start_time'],
-                    'end_time': appointment['end_time'],
-                    'can_watch_evee': appointment['can_watch_evee'],
-                    'user': appointment['user'],
-                    'is_recurring': appointment['is_recurring'],
-                    'recurrence_days': appointment['recurrence_days'] or [],
-                    'recurrence_end_date': appointment['recurrence_end_date'].strftime('%Y-%m-%d') if appointment['recurrence_end_date'] else None
-                }
-                appointments_list.append(appointment_data)
-            except Exception as e:
-                print(f"Error processing appointment {appointment.get('id')}: {str(e)}")
-                continue
-        
-        print("\nFetched appointments:")
-        for appointment in appointments_list:
-            print(f"Appointment {appointment['id']}:")
-            print(f"Title: {appointment['title']}")
-            print(f"Recurring: {appointment['is_recurring']}")
-            print(f"Recurrence days: {appointment['recurrence_days']}")
-            print(f"Recurrence end date: {appointment['recurrence_end_date']}")
-        
         return JsonResponse({
-            'appointments': appointments_list
+            'status': 'success',
+            'appointments': list(appointments)
         })
     except Exception as e:
-        print(f"Error in get_appointments: {str(e)}")
-        return JsonResponse({'error': str(e)}, status=400)
+        print("Error in get_appointments view:", str(e))
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
 
 @csrf_exempt
 @require_POST

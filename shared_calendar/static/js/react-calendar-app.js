@@ -219,8 +219,9 @@ const Timeline = () => {
                         borderRadius: '4px',
                         padding: '4px',
                         overflow: 'hidden',
-                        zIndex: 1,
-                        cursor: isEditable ? 'pointer' : 'default'
+                        zIndex: 10,
+                        cursor: isEditable ? 'pointer' : 'default',
+                        pointerEvents: 'auto'
                     }}
                 >
                     <div style={{ fontWeight: 'bold' }}>{appointment.title}</div>
@@ -264,7 +265,8 @@ const Timeline = () => {
             top: '0',
             overflowX: 'hidden',
             overflowY: 'auto',
-            touchAction: 'pan-y pinch-zoom'
+            touchAction: 'pan-y pinch-zoom',
+            pointerEvents: 'auto'
         }}>
             <div style={{
                 width: '100%',
@@ -274,7 +276,8 @@ const Timeline = () => {
                 overflow: 'hidden',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
                 boxSizing: 'border-box',
-                position: 'relative'
+                position: 'relative',
+                pointerEvents: 'auto'
             }}>
                 {/* User labels */}
                 <div style={{

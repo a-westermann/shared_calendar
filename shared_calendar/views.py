@@ -12,7 +12,6 @@ from dateutil import parser
 from django.contrib.auth.decorators import login_required
 from django.db import models
 from .notifications import send_notification
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -419,12 +418,3 @@ def unsubscribe_from_notifications(request):
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
-@require_GET
-def get_vapid_public_key(request):
-    """
-    Return the VAPID public key to the frontend.
-    """
-    return JsonResponse({
-        'publicKey': settings.WEBPUSH_SETTINGS['VAPID_PUBLIC_KEY']
-    })

@@ -5,13 +5,7 @@ self.addEventListener('push', function(event) {
             body: data.body,
             icon: '/static/images/icon.png',
             badge: '/static/images/badge.png',
-            data: data.data || {},
-            actions: [
-                {
-                    action: 'open',
-                    title: 'Open Calendar'
-                }
-            ]
+            data: data.data || {}
         };
         
         event.waitUntil(
@@ -23,13 +17,8 @@ self.addEventListener('push', function(event) {
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     
-    if (event.action === 'open') {
-        // Open the calendar page
-        event.waitUntil(
-            clients.openWindow('/calendar/')
-        );
-    } else if (event.notification.data && event.notification.data.url) {
-        // Open a specific URL if provided in the notification data
+    // Handle notification click
+    if (event.notification.data && event.notification.data.url) {
         event.waitUntil(
             clients.openWindow(event.notification.data.url)
         );

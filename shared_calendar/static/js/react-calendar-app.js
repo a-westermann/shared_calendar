@@ -34,27 +34,6 @@ const Timeline = () => {
     const [appointments, setAppointments] = React.useState([]);
     const [selectedDate, setSelectedDate] = React.useState(new Date().toISOString().split('T')[0]);
 
-    // Initialize notifications when component mounts
-    React.useEffect(() => {
-        const initNotifications = async () => {
-            try {
-                const response = await fetch('/calendar/api/notifications/vapid-public-key/');
-                const { publicKey } = await response.json();
-                
-                // Set the VAPID public key in the environment
-                window.VAPID_PUBLIC_KEY = publicKey;
-                
-                // Import and initialize notifications
-                const { initializeNotifications } = await import('/static/js/notifications.js');
-                await initializeNotifications();
-            } catch (error) {
-                console.error('Error initializing notifications:', error);
-            }
-        };
-        
-        initNotifications();
-    }, []);
-
     // Fetch appointments when component mounts or selected date changes
     React.useEffect(() => {
         fetchAppointments();

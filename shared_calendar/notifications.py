@@ -1,6 +1,13 @@
+import firebase_admin
+from firebase_admin import credentials, messaging
+import os
 from django.conf import settings
 from pywebpush import webpush, WebPushException
 import json
+
+# Initialize Firebase Admin SDK
+cred = credentials.Certificate(os.path.join(os.path.dirname(__file__), 'firebase-credentials.json'))
+firebase_admin.initialize_app(cred)
 
 def send_web_push(subscription_info, message_body):
     """

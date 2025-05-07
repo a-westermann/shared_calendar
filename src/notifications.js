@@ -54,20 +54,10 @@ const subscribeToPushNotifications = async () => {
             return null;
         }
 
-        // Get the VAPID public key from the window object
-        const publicKey = window.VAPID_PUBLIC_KEY;
-        if (!publicKey) {
-            console.error('VAPID public key not found');
-            return null;
-        }
-
-        // Convert the public key to Uint8Array
-        const applicationServerKey = urlBase64ToUint8Array(publicKey);
-
         // Get the subscription
         const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey
+            applicationServerKey: process.env.VAPID_PUBLIC_KEY // This will be provided by your server
         });
 
         console.log('Push subscription successful:', subscription);
@@ -78,26 +68,10 @@ const subscribeToPushNotifications = async () => {
     }
 };
 
-// Helper function to convert base64 string to Uint8Array
-const urlBase64ToUint8Array = (base64String) => {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-        .replace(/\-/g, '+')
-        .replace(/_/g, '/');
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-};
-
 // Send subscription to server
 const sendSubscriptionToServer = async (subscription) => {
     try {
-        const response = await fetch('/calendar/api/notifications/subscribe/', {
+        const response = await fetch('/api/notifications/subscribe/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

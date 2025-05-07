@@ -40,5 +40,6 @@ setup(
         'Django>=4.2.0',
         'python-dateutil>=2.8.2',
         'firebase-admin>=6.2.0',
+        'pywebpush>=1.14.0',
     ],
 ) 
